@@ -80,7 +80,6 @@ namespace TransLiner
         public TLCommand LoadOPMLCommand { get; private set; }
         public TLCommand SaveOPMLCommand { get; private set; }
         public TLCommand LoadTextCommand { get; private set; }
-        public TLCommand LoadTextDefaultCommand { get; private set; }
         public TLCommand SaveTextCommand { get; private set; }
         public TLCommand LoadMarkUpTextCommand { get; private set; }
         public TLCommand SaveMarkUpTextCommand { get; private set; }
@@ -126,7 +125,6 @@ namespace TransLiner
             LoadOPMLCommand = new TLCommand(loadOPMLAll);
             SaveOPMLCommand = new TLCommand(saveOPMLAll);
             LoadTextCommand = new TLCommand(loadTextAll);
-            LoadTextDefaultCommand = new TLCommand(() => loadTextAll(Encoding.Default));
             SaveTextCommand = new TLCommand(saveTextAll);
             LoadMarkUpTextCommand = new TLCommand(loadMarkUpTextAll);
             SaveMarkUpTextCommand = new TLCommand(saveMarkUpTextAll);
@@ -340,7 +338,7 @@ namespace TransLiner
         {
             Action<TLPage, string> readText = delegate (TLPage page, string path)
             {
-                StreamReader sr = new StreamReader(path);
+                StreamReader sr = new StreamReader(path, settings.Encoding);
                 string text = sr.ReadToEnd();
                 sr.Close();
                 page.FromText(text, settings.IndentHeader);
@@ -353,33 +351,7 @@ namespace TransLiner
         {
             Action<string> readText = delegate (string path)
             {
-                StreamReader sr = new StreamReader(path);
-                string text = sr.ReadToEnd();
-                sr.Close();
-                FromText(text, settings.IndentHeader);
-            };
-            string filter = "テキストファイル (*.txt)|*.txt|すべてのファイル (*.*)|*.*";
-            loadAll(settings.TextFileName, path => settings.TextFileName = path, readText, filter);
-        }
-
-        private void loadTextSel(Encoding encoding)
-        {
-            Action<TLPage, string> readText = delegate (TLPage page, string path)
-            {
-                StreamReader sr = new StreamReader(path, encoding);
-                string text = sr.ReadToEnd();
-                sr.Close();
-                page.FromText(text, settings.IndentHeader);
-            };
-            string filter = "テキストファイル (*.txt)|*.txt|すべてのファイル (*.*)|*.*";
-            loadSel(settings.TextFileName, path => settings.TextFileName = path, readText, filter);
-        }
-
-        private void loadTextAll(Encoding encoding)
-        {
-            Action<string> readText = delegate (string path)
-            {
-                StreamReader sr = new StreamReader(path, encoding);
+                StreamReader sr = new StreamReader(path, settings.Encoding);
                 string text = sr.ReadToEnd();
                 sr.Close();
                 FromText(text, settings.IndentHeader);
@@ -392,7 +364,7 @@ namespace TransLiner
         {
             Action<TLPage, string> readText = delegate (TLPage page, string path)
             {
-                StreamReader sr = new StreamReader(path);
+                StreamReader sr = new StreamReader(path, settings.Encoding);
                 string text = sr.ReadToEnd();
                 sr.Close();
                 page.FromText(text, settings.MarkList);
@@ -405,7 +377,7 @@ namespace TransLiner
         {
             Action<string> readText = delegate (string path)
             {
-                StreamReader sr = new StreamReader(path);
+                StreamReader sr = new StreamReader(path, settings.Encoding);
                 string text = sr.ReadToEnd();
                 sr.Close();
                 FromText(text, settings.MarkList);

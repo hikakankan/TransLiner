@@ -175,6 +175,51 @@ namespace TransLiner
         }
 
         /// <summary>
+        /// 設定を読み込む
+        /// </summary>
+        /// <param name="section">設定のセクション</param>
+        /// <param name="key">設定のキー</param>
+        /// <param name="val">設定のデフォルトの値</param>
+        /// <param name="doc">XMLのドキュメント</param>
+        /// <returns>設定の値</returns>
+        private Encoding get_setting_encoding(string section, string key, Encoding val, XmlDocument doc)
+        {
+            try
+            {
+                string setting = "";
+                get_setting_string(section, key, ref setting, doc);
+                if ( setting != "" )
+                {
+                    if ( setting == "Default" )
+                    {
+                        return Encoding.Default;
+                    }
+                    else if ( setting == "Unicode" )
+                    {
+                        return Encoding.Unicode;
+                    }
+                    else if ( setting == "UTF7" )
+                    {
+                        return Encoding.UTF7;
+                    }
+                    else if ( setting == "UTF8" )
+                    {
+                        return Encoding.UTF8;
+                    }
+                    else if ( setting == "UTF32" )
+                    {
+                        return Encoding.UTF32;
+                    }
+                }
+                return val;
+            }
+            catch ( Exception )
+            {
+                return val;
+            }
+        }
+
+        /// <summary>
         /// 設定を書き込む
         /// </summary>
         /// <param name="section">設定のセクション</param>
@@ -260,6 +305,45 @@ namespace TransLiner
         }
 
         /// <summary>
+        /// 設定を書き込む
+        /// </summary>
+        /// <param name="section">設定のセクション</param>
+        /// <param name="key">設定のキー</param>
+        /// <param name="val">設定の値</param>
+        /// <param name="doc">XMLのドキュメント</param>
+        private void set_setting_encoding(string section, string key, Encoding val, XmlDocument doc)
+        {
+            try
+            {
+                string sEncoding = "Default";
+                if ( val == Encoding.Default )
+                {
+                    sEncoding = "Default";
+                }
+                else if ( val == Encoding.Unicode )
+                {
+                    sEncoding = "Unicode";
+                }
+                else if ( val == Encoding.UTF7 )
+                {
+                    sEncoding = "UTF7";
+                }
+                else if ( val == Encoding.UTF8 )
+                {
+                    sEncoding = "UTF8";
+                }
+                else if ( val == Encoding.UTF32 )
+                {
+                    sEncoding = "UTF32";
+                }
+                set_setting_string(section, key, Convert.ToString(sEncoding), doc);
+            }
+            catch ( Exception )
+            {
+            }
+        }
+
+        /// <summary>
         /// 設定を読み込む
         /// </summary>
         /// <param name="path">設定ファイルのパス</param>
@@ -282,27 +366,7 @@ namespace TransLiner
                 OPMLFileName = get_setting_string("file", "opml", OPMLFileName, doc);
                 TextFileName = get_setting_string("file", "text", TextFileName, doc);
 
-                string sEncoding = get_setting_string("text", "encoding", Encoding.ToString(), doc);
-                if ( sEncoding == "Default" )
-                {
-                    Encoding = Encoding.Default;
-                }
-                else if ( sEncoding == "Unicode" )
-                {
-                    Encoding = Encoding.Unicode;
-                }
-                else if ( sEncoding == "UTF7" )
-                {
-                    Encoding = Encoding.UTF7;
-                }
-                else if ( sEncoding == "UTF8" )
-                {
-                    Encoding = Encoding.UTF8;
-                }
-                else if ( sEncoding == "UTF32" )
-                {
-                    Encoding = Encoding.UTF32;
-                }
+                Encoding = get_setting_encoding("text", "encoding", Encoding, doc);
                 LineEnd = get_setting_string("text", "lineend", LineEnd, doc);
                 IndentHeader = get_setting_string("text", "indent", IndentHeader, doc);
                 for ( int i = 0; i < MarkList.Count; i++ )
@@ -354,7 +418,7 @@ namespace TransLiner
                 set_setting_string("file", "opml", OPMLFileName, doc);
                 set_setting_string("file", "text", TextFileName, doc);
 
-                set_setting_string("text", "encoding", Encoding.ToString(), doc);
+                set_setting_encoding("text", "encoding", Encoding, doc);
                 set_setting_string("text", "lineend", LineEnd, doc);
                 set_setting_string("text", "indent", IndentHeader, doc);
                 for ( int i = 0; i < MarkList.Count; i++ )
