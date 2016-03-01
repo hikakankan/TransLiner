@@ -480,7 +480,7 @@ namespace TransLiner
             Action<TLPage, string> writeText = delegate (TLPage page, string path)
             {
                 string text = page.ToText(settings.IndentHeader);
-                StreamWriter sw = new StreamWriter(path);
+                StreamWriter sw = new StreamWriter(path, false, settings.Encoding);
                 sw.Write(text);
                 sw.Close();
             };
@@ -494,7 +494,7 @@ namespace TransLiner
             Action<string> writeText = delegate (string path)
             {
                 string text = ToText(settings.IndentHeader);
-                StreamWriter sw = new StreamWriter(path);
+                StreamWriter sw = new StreamWriter(path, false, settings.Encoding);
                 sw.Write(text);
                 sw.Close();
             };
@@ -508,7 +508,7 @@ namespace TransLiner
             Action<TLPage, string> writeText = delegate (TLPage page, string path)
             {
                 string text = page.ToText(settings.MarkList, settings.MarkListDefault);
-                StreamWriter sw = new StreamWriter(path);
+                StreamWriter sw = new StreamWriter(path, false, settings.Encoding);
                 sw.Write(text);
                 sw.Close();
             };
@@ -522,7 +522,7 @@ namespace TransLiner
             Action<string> writeText = delegate (string path)
             {
                 string text = ToText(settings.MarkList, settings.MarkListDefault);
-                StreamWriter sw = new StreamWriter(path);
+                StreamWriter sw = new StreamWriter(path, false, settings.Encoding);
                 sw.Write(text);
                 sw.Close();
             };
