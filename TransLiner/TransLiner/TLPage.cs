@@ -806,7 +806,7 @@ namespace TransLiner
             }
         }
 
-        private IEnumerable<string> makeSections(string text, string header)
+        private IEnumerable<string> makeSections(string text, string header, string path)
         {
             string[] sections = text.Split(new string[] { "\r\n" + header }, StringSplitOptions.None);
             bool first = true;
@@ -814,7 +814,15 @@ namespace TransLiner
             {
                 if ( first && section.Length > 0 )
                 {
-                    yield return section.Substring(1);
+                    if ( section.StartsWith(header) )
+                    {
+                        yield return Path.GetFileNameWithoutExtension(path);
+                        yield return section.Substring(1);
+                    }
+                    else
+                    {
+                        yield return section;
+                    }
                 }
                 else
                 {
@@ -829,9 +837,10 @@ namespace TransLiner
         /// </summary>
         /// <param name="text"></param>
         /// <param name="header"></param>
-        public void FromText(string text, string header)
+        /// <param name="path">ファイルのパス。ルートのテキストがないときファイル名をテキストにする。</param>
+        public void FromText(string text, string header, string path)
         {
-            FromText(makeSections(text, header), header);
+            FromText(makeSections(text, header, path), header);
         }
 
         /// <summary>

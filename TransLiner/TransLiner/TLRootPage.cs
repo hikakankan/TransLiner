@@ -341,7 +341,7 @@ namespace TransLiner
                 StreamReader sr = new StreamReader(path, settings.Encoding);
                 string text = sr.ReadToEnd();
                 sr.Close();
-                page.FromText(text, settings.IndentHeader);
+                page.FromText(text, settings.IndentHeader, path);
             };
             string filter = "テキストファイル (*.txt)|*.txt|すべてのファイル (*.*)|*.*";
             loadSel(settings.TextFileName, path => settings.TextFileName = path, readText, filter);
@@ -354,7 +354,7 @@ namespace TransLiner
                 StreamReader sr = new StreamReader(path, settings.Encoding);
                 string text = sr.ReadToEnd();
                 sr.Close();
-                FromText(text, settings.IndentHeader);
+                FromText(text, settings.IndentHeader, path);
             };
             string filter = "テキストファイル (*.txt)|*.txt|すべてのファイル (*.*)|*.*";
             loadAll(settings.TextFileName, path => settings.TextFileName = path, readText, filter);
