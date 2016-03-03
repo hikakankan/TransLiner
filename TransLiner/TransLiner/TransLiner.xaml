@@ -109,23 +109,16 @@
             </TreeView.Resources>
         </TreeView>
         <StackPanel Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="0,0,0,0" Grid.Row="1" Grid.RowSpan="1" VerticalAlignment="Top" Orientation="Horizontal">
+            <Button x:Name="buttonDown" Content="移動↓" Margin="0" Grid.Row="1" Command="{Binding MoveDown}"/>
             <Button x:Name="buttonUp" Content="↑" Margin="0" Grid.Row="1" Command="{Binding MoveUp}"/>
-            <Button x:Name="buttonDown" Content="↓" Margin="0" Grid.Row="1" Command="{Binding MoveDown}"/>
-            <Button x:Name="buttonLeftUp" Content="↑←" Margin="0" Grid.Row="1" Command="{Binding MoveLeftUp}"/>
-            <Button x:Name="buttonLeftDown" Content="↓←" Margin="0" Grid.Row="1" Command="{Binding MoveLeftDown}"/>
-            <Button x:Name="buttonUpRightTop" Content="↑→Ｔ" Margin="0" Grid.Row="1" Command="{Binding MoveUpRightTop}"/>
-            <Button x:Name="buttonUpRightBottom" Content="↑→⊥" Margin="0" Grid.Row="1" Command="{Binding MoveUpRightBottom}"/>
-            <Button x:Name="buttonDownRightTop" Content="↓→Ｔ" Margin="0" Grid.Row="1" Command="{Binding MoveDownRightTop}"/>
-            <Button x:Name="buttonDownRightBottom" Content="↓→⊥" Margin="0" Grid.Row="1" Command="{Binding MoveDownRightBottom}"/>
-            <Button x:Name="buttonCreateUp" Content="↑＊" Margin="0" Grid.Row="1" Command="{Binding CreateUp}"/>
-            <Button x:Name="buttonCreateDown" Content="↓＊" Margin="0" Grid.Row="1" Command="{Binding CreateDown}"/>
-            <Button x:Name="buttonCreateRightTop" Content="→Ｔ＊" Margin="0" Grid.Row="1" Command="{Binding CreateRightTop}"/>
-            <Button x:Name="buttonCreateRightBottom" Content="→⊥＊" Margin="0" Grid.Row="1" Command="{Binding CreateRightBottom}"/>
-            <Button x:Name="buttonDuplicateUp" Content="↑＋" Margin="0" Grid.Row="1" Command="{Binding DuplicateUp}"/>
-            <Button x:Name="buttonDuplicateDown" Content="↓＋" Margin="0" Grid.Row="1" Command="{Binding DuplicateDown}"/>
-            <Button x:Name="buttonDuplicateRightTop" Content="→Ｔ＋" Margin="0" Grid.Row="1" Command="{Binding DuplicateRightTop}"/>
-            <Button x:Name="buttonDuplicateRightBottom" Content="→⊥＋" Margin="0" Grid.Row="1" Command="{Binding DuplicateRightBottom}"/>
-            <Button x:Name="buttonDelete" Content="×" Margin="0" Grid.Row="1" Command="{Binding DeleteCommand}"/>
+            <Button x:Name="buttonLeftUp" Content="←" Margin="0" Grid.Row="1" Command="{Binding MoveLeftUp}"/>
+            <Button x:Name="buttonDownRightTop" Content="→" Margin="0" Grid.Row="1" Command="{Binding MoveDownRightTop}"/>
+            <Button x:Name="buttonCreateDown" Content="作成↓" Margin="0" Grid.Row="1" Command="{Binding CreateDown}"/>
+            <Button x:Name="buttonCreateUp" Content="↑" Margin="0" Grid.Row="1" Command="{Binding CreateUp}"/>
+            <Button x:Name="buttonCreateRightTop" Content="→" Margin="0" Grid.Row="1" Command="{Binding CreateRightTop}"/>
+            <Button x:Name="buttonDuplicateDown" Content="複製↓" Margin="0" Grid.Row="1" Command="{Binding DuplicateDown}"/>
+            <Button x:Name="buttonDuplicateUp" Content="↑" Margin="0" Grid.Row="1" Command="{Binding DuplicateUp}"/>
+            <Button x:Name="buttonDelete" Content="削除×" Margin="0" Grid.Row="1" Command="{Binding DeleteCommand}"/>
         </StackPanel>
         <TextBox x:Name="textBox" AcceptsReturn="True" VerticalContentAlignment="Top" Grid.Column="2" Margin="0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Path=SelectedText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
     </Grid>

@@ -119,7 +119,7 @@ namespace TransLiner
             SelectedDown = new TLCommand(makeCommand(SelectedDownX));
             Expand = new TLCommand(makeCommand(ExpandX));
             Unexpand = new TLCommand(makeCommand(UnexpandX));
-            DeleteCommand = new TLCommand(() => Delete(null, -1));
+            DeleteCommand = new TLCommand(makeCommand(DeleteX));
             LoadXMLCommand = new TLCommand(loadXMLAll);
             SaveXMLCommand = new TLCommand(saveXMLAll);
             LoadOPMLCommand = new TLCommand(loadOPMLAll);
@@ -256,6 +256,15 @@ namespace TransLiner
         private bool UnexpandX()
         {
             return ExpandedChange(null, -1, false);
+        }
+
+        private bool DeleteX()
+        {
+            if ( System.Windows.MessageBox.Show("削除しますか？", "削除", System.Windows.MessageBoxButton.OKCancel) == System.Windows.MessageBoxResult.OK )
+            {
+                return Delete(null, -1);
+            }
+            return false;
         }
 
         private void load(string path, Action<string> setPath, Action<string> loader, string filter)
