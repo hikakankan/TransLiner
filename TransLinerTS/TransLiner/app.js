@@ -13,6 +13,8 @@ window.onload = function () {
     var contentElement = document.getElementById("contentTextBox");
     treeview.HeadlineElement = headlineElement;
     treeview.ContentElement = contentElement;
+    var inputFileElement = document.getElementById("file");
+    treeview.InputFileElement = inputFileElement;
     treeview.draw();
 };
 //# sourceMappingURL=app.js.map

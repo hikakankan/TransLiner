@@ -6,7 +6,7 @@
     private menuButtonWidth = 24;
     private menuButtonWidthMargin = 26;
     private menuButtonWidth2 = 48;
-    private headlineWidth = 160;
+    private headlineWidth = 320;
     private lineHeight = 24;
     private settings: ViewSettings;
     private radius = 12;
@@ -393,5 +393,49 @@
         var treeview = this;
         contentElement.onkeydown = function () { treeview.setSelectedText(contentElement.value) }
         contentElement.onkeyup = function () { treeview.setSelectedText(contentElement.value) }
+    }
+
+    private inputFileElement: HTMLInputElement;
+
+    public set InputFileElement(inputFileElement: HTMLInputElement) {
+        this.inputFileElement = inputFileElement;
+        var treeview = this;
+        inputFileElement.addEventListener("change", function () {
+            var file = inputFileElement.files[0];
+            treeview.load(file);
+            //treeview.loadX(file);
+        }, true);
+    }
+
+    public load(file: File) {
+        // FileReaderを使った読み込み
+        var treeview = this;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            treeview.clear();
+            if (file.type == "application/xml" || file.type == "text/xml") {
+                var parser = new DOMParser();
+                var doc: Document = parser.parseFromString(reader.result, "text/xml");
+                treeview.rootPage.loadXML(doc.documentElement);
+            } else {
+                treeview.rootPage.loadText(reader.result, file.name);
+            }
+            treeview.draw();
+        }
+        reader.readAsText(file);
+    }
+
+    public loadX(file: File) {
+        // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
+        var request = new XMLHttpRequest();
+        request.open("GET", file.name, false);
+        request.send(null);
+        this.clear();
+        if (file.type == "application/xml" || file.type == "text/xml") {
+            this.rootPage.loadXML(request.responseXML.documentElement);
+        } else {
+            this.rootPage.loadText(request.responseText, file.name);
+        }
+        this.draw();
     }
 }

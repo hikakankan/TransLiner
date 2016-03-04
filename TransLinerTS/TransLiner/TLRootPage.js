@@ -97,6 +97,58 @@ var TLRootPage = (function (_super) {
     TLRootPage.prototype.Unexpand = function () {
         return this.ExpandedChange(null, -1, false);
     };
+    TLRootPage.prototype.loadXML = function (xml) {
+        this.IsExpanded = false;
+        this.SubPages.Clear();
+        this.FromXml(xml);
+    };
+    TLRootPage.prototype.loadText = function (text, path) {
+        this.IsExpanded = false;
+        this.SubPages.Clear();
+        this.FromText2(text, ".", path);
+    };
+    TLRootPage.prototype.GetFileNameWithoutExtension = function (path) {
+        var index_sep = path.lastIndexOf("\\");
+        if (index_sep >= 0) {
+            path = path.substring(index_sep + 1);
+        }
+        var index_ext = path.lastIndexOf(".");
+        if (index_ext >= 0) {
+            path = path.substring(0, index_ext);
+        }
+        return path;
+    };
+    TLRootPage.prototype.makeSections = function (text, header, path) {
+        var result = new Array();
+        var sections = text.split("\r\n" + header);
+        var first = true;
+        for (var _i = 0; _i < sections.length; _i++) {
+            var section = sections[_i];
+            if (first && section.length > 0) {
+                if (this.StartsWith(section, header)) {
+                    result.push(this.GetFileNameWithoutExtension(path));
+                    result.push(section.substring(1));
+                }
+                else {
+                    result.push(section);
+                }
+            }
+            else {
+                result.push(section);
+            }
+            first = false;
+        }
+        return result;
+    };
+    /// <summary>
+    /// WZ形式のテキストを読み込む
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="header"></param>
+    /// <param name="path">ファイルのパス。ルートのテキストがないときファイル名をテキストにする。</param>
+    TLRootPage.prototype.FromText2 = function (text, header, path) {
+        this.FromText(this.makeSections(text, header, path), header);
+    };
     return TLRootPage;
 })(TLPage);
 //# sourceMappingURL=TLRootPage.js.map

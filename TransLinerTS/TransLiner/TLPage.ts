@@ -18,6 +18,9 @@
     public Add(page: TLPage): void {
         this.Collection.push(page);
     }
+    public Clear(): void {
+        this.Collection = new Array<TLPage>();
+    }
 }
 
 class TLPage {
@@ -476,50 +479,33 @@ class TLPage {
     //    return page;
     //}
 
-    //private XmlElement find_element(XmlElement parent, string name)
-    //{
-    //    if (parent.HasChildNodes) {
-    //        foreach(XmlNode child in parent.ChildNodes)
-    //        {
-    //            if (child is XmlElement && child.Name == name )
-    //            {
-    //                return (XmlElement)child;
-    //            }
-    //        }
-    //    }
-    //    return null;
-    //}
+    private find_element(parent: Element, name: string): Element {
+        if (parent.hasChildNodes) {
+            var children: NodeListOf<Element> = parent.getElementsByTagName(name);
+            if (children.length > 0) {
+                return children[0];
+            }
+        }
+        return null;
+    }
 
-    //private string get_text(XmlElement parent, string name)
-    //{
-    //    XmlElement element = find_element(parent, name);
-    //    if (element.HasChildNodes) {
-    //        foreach(XmlNode child in element.ChildNodes)
-    //        {
-    //            if (child is XmlText )
-    //            {
-    //                return child.InnerText;
-    //            }
-    //        }
-    //    }
-    //    return "";
-    //}
+    private get_text(parent: Element, name: string): string {
+        var element = this.find_element(parent, name);
+        return element.textContent;
+    }
 
-    //public void FromXml(XmlElement element)
-    //{
-    //    //Title = get_text(element, "title");
-    //    Text = get_text(element, "text");
-    //    XmlElement subpages = find_element(element, "subpages");
-    //    foreach(XmlNode child in subpages.ChildNodes)
-    //    {
-    //        if (child is XmlElement )
-    //        {
-    //            TLPage page = new TLPage("", root);
-    //            page.FromXml((XmlElement)child);
-    //            SubPages.Add(page);
-    //        }
-    //    }
-    //}
+    public FromXml(element: Element): void {
+        this.Text = this.get_text(element, "text");
+        var subpages: Element = this.find_element(element, "subpages");
+        for (var i = 0; i < subpages.childNodes.length; i++) {
+            var child: Node = subpages.childNodes[i];
+            if (child.nodeType == Node.ELEMENT_NODE) {
+                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                page.FromXml(<Element>child);
+                this.SubPages.Add(page);
+            }
+        }
+    }
 
     //public void Load(string path)
     //{
@@ -637,68 +623,46 @@ class TLPage {
     //    return text;
     //}
 
-    //private IEnumerable < List < string >> splitSections(IEnumerable < string > sections, string header)
-    //{
-    //    List < string > chapter = null;
-    //    foreach(string section in sections)
-    //    {
-    //        if (section.StartsWith(header)) {
-    //            if (chapter == null) {
-    //                chapter = new List<string>();
-    //            }
-    //            chapter.Add(section.Substring(1));
-    //        }
-    //        else {
-    //            if (chapter != null) {
-    //                yield return chapter;
-    //            }
-    //            chapter = new List<string>();
-    //            chapter.Add(section);
-    //        }
-    //    }
-    //    if (chapter != null) {
-    //        yield return chapter;
-    //    }
-    //}
+    protected StartsWith(str: string, header: string): boolean {
+        return str.length >= header.length && str.substr(0, header.length) == header;
+    }
 
-    //public void FromText(IEnumerable < string > sections, string header)
-    //{
-    //    if (sections.Count() > 0) {
-    //        Text = sections.ElementAt(0);
-    //        foreach(List < string > chapter in splitSections(sections.Skip(1), header))
-    //        {
-    //            TLPage page = new TLPage("", root);
-    //            page.FromText(chapter, header);
-    //            SubPages.Add(page);
-    //        }
-    //    }
-    //}
+    private splitSections(sections: string[], header: string): string[][] {
+        var result: Array<string[]> = new Array<string[]>();
+        var chapter: string[] = null;
+        for (var section of sections) {
+            if (this.StartsWith(section, header)) {
+                if (chapter == null) {
+                    chapter = new Array<string>();
+                }
+                chapter.push(section.substring(1));
+            }
+            else {
+                if (chapter != null) {
+                    result.push(chapter);
+                }
+                chapter = new Array<string>();
+                chapter.push(section);
+            }
+        }
+        if (chapter != null) {
+            result.push(chapter);
+        }
+        return result;
+    }
 
-    //private IEnumerable < string > makeSections(string text, string header)
-    //{
-    //    string[] sections = text.Split(new string[] { "\r\n" + header }, StringSplitOptions.None);
-    //    bool first = true;
-    //    foreach(string section in sections)
-    //    {
-    //        if (first && section.Length > 0) {
-    //            yield return section.Substring(1);
-    //        }
-    //        else {
-    //            yield return section;
-    //        }
-    //        first = false;
-    //    }
-    //}
-
-    ///// <summary>
-    ///// WZ形式のテキストを読み込む
-    ///// </summary>
-    ///// <param name="text"></param>
-    ///// <param name="header"></param>
-    //public void FromText(string text, string header)
-    //{
-    //    FromText(makeSections(text, header), header);
-    //}
+    public FromText(sections: string[], header: string): void {
+        if (sections.length > 0) {
+            this.Text = sections[0];
+            var sections2 = sections.slice();
+            sections2.shift();
+            for (var chapter of this.splitSections(sections2, header)) {
+                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                page.FromText(chapter, header);
+                this.SubPages.Add(page);
+            }
+        }
+    }
 
     ///// <summary>
     ///// MIFES形式のテキストに変換

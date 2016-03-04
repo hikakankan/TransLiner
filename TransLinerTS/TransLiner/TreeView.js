@@ -5,7 +5,7 @@ var TreeView = (function () {
         this.menuButtonWidth = 24;
         this.menuButtonWidthMargin = 26;
         this.menuButtonWidth2 = 48;
-        this.headlineWidth = 160;
+        this.headlineWidth = 320;
         this.lineHeight = 24;
         this.radius = 12;
         this.xButtonSize = 24;
@@ -356,6 +356,51 @@ var TreeView = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(TreeView.prototype, "InputFileElement", {
+        set: function (inputFileElement) {
+            this.inputFileElement = inputFileElement;
+            var treeview = this;
+            inputFileElement.addEventListener("change", function () {
+                var file = inputFileElement.files[0];
+                treeview.load(file);
+                //treeview.loadX(file);
+            }, true);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    TreeView.prototype.load = function (file) {
+        // FileReaderを使った読み込み
+        var treeview = this;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            treeview.clear();
+            if (file.type == "application/xml" || file.type == "text/xml") {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(reader.result, "text/xml");
+                treeview.rootPage.loadXML(doc.documentElement);
+            }
+            else {
+                treeview.rootPage.loadText(reader.result, file.name);
+            }
+            treeview.draw();
+        };
+        reader.readAsText(file);
+    };
+    TreeView.prototype.loadX = function (file) {
+        // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
+        var request = new XMLHttpRequest();
+        request.open("GET", file.name, false);
+        request.send(null);
+        this.clear();
+        if (file.type == "application/xml" || file.type == "text/xml") {
+            this.rootPage.loadXML(request.responseXML.documentElement);
+        }
+        else {
+            this.rootPage.loadText(request.responseText, file.name);
+        }
+        this.draw();
+    };
     return TreeView;
 })();
 //# sourceMappingURL=TreeView.js.map

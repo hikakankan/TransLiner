@@ -108,6 +108,62 @@
         return this.ExpandedChange(null, -1, false);
     }
 
+    public loadXML(xml: Element): void {
+        this.IsExpanded = false;
+        this.SubPages.Clear();
+        this.FromXml(xml);
+    }
+
+    public loadText(text: string, path: string): void {
+        this.IsExpanded = false;
+        this.SubPages.Clear();
+        this.FromText2(text, ".", path);
+    }
+
+    private GetFileNameWithoutExtension(path: string): string {
+        var index_sep = path.lastIndexOf("\\");
+        if (index_sep >= 0) {
+            path = path.substring(index_sep + 1);
+        }
+        var index_ext = path.lastIndexOf(".");
+        if (index_ext >= 0) {
+            path = path.substring(0, index_ext);
+        }
+        return path;
+    }
+
+    private makeSections(text: string, header: string, path: string): string[] {
+        var result: string[] = new Array<string>();
+        var sections: string[] = text.split("\r\n" + header);
+        var first: boolean = true;
+        for (var section of sections) {
+            if (first && section.length > 0) {
+                if (this.StartsWith(section, header)) {
+                    result.push(this.GetFileNameWithoutExtension(path));
+                    result.push(section.substring(1));
+                }
+                else {
+                    result.push(section);
+                }
+            }
+            else {
+                result.push(section);
+            }
+            first = false;
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// WZ形式のテキストを読み込む
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="header"></param>
+    /// <param name="path">ファイルのパス。ルートのテキストがないときファイル名をテキストにする。</param>
+    public FromText2(text: string, header: string, path: string): void {
+        this.FromText(this.makeSections(text, header, path), header);
+    }
+
     //private void load(string path, Action < string > setPath, Action < string > loader, string filter)
     //{
     //    try {

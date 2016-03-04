@@ -13,5 +13,7 @@
     var contentElement = <HTMLTextAreaElement>document.getElementById("contentTextBox");
     treeview.HeadlineElement = headlineElement;
     treeview.ContentElement = contentElement;
+    var inputFileElement = <HTMLInputElement>document.getElementById("file");
+    treeview.InputFileElement = inputFileElement;
     treeview.draw();
 };

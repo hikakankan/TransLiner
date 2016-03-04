@@ -21,6 +21,9 @@ var TLPageCollection = (function () {
     TLPageCollection.prototype.Add = function (page) {
         this.Collection.push(page);
     };
+    TLPageCollection.prototype.Clear = function () {
+        this.Collection = new Array();
+    };
     return TLPageCollection;
 })();
 var TLPage = (function () {
@@ -439,6 +442,197 @@ var TLPage = (function () {
             }
         }
         return false;
+    };
+    //private XmlElement create_text(XmlDocument doc, string name, string text)
+    //{
+    //    XmlElement element = doc.CreateElement(name);
+    //    XmlText content = doc.CreateTextNode(text);
+    //    element.AppendChild(content);
+    //    return element;
+    //}
+    //public XmlElement ToXml(XmlDocument doc)
+    //{
+    //    XmlElement page = doc.CreateElement("page");
+    //    page.AppendChild(create_text(doc, "title", Title));
+    //    page.AppendChild(create_text(doc, "text", text));
+    //    XmlElement subpages = doc.CreateElement("subpages");
+    //    page.AppendChild(subpages);
+    //    foreach(TLPage p in SubPages)
+    //    {
+    //        subpages.AppendChild(p.ToXml(doc));
+    //    }
+    //    return page;
+    //}
+    TLPage.prototype.find_element = function (parent, name) {
+        if (parent.hasChildNodes) {
+            var children = parent.getElementsByTagName(name);
+            if (children.length > 0) {
+                return children[0];
+            }
+        }
+        return null;
+    };
+    TLPage.prototype.get_text = function (parent, name) {
+        var element = this.find_element(parent, name);
+        return element.textContent;
+    };
+    TLPage.prototype.FromXml = function (element) {
+        this.Text = this.get_text(element, "text");
+        var subpages = this.find_element(element, "subpages");
+        for (var i = 0; i < subpages.childNodes.length; i++) {
+            var child = subpages.childNodes[i];
+            if (child.nodeType == Node.ELEMENT_NODE) {
+                var page = new TLPage("", "", this.root, this.NoTitle);
+                page.FromXml(child);
+                this.SubPages.Add(page);
+            }
+        }
+    };
+    //public void Load(string path)
+    //{
+    //    XmlDocument doc = new XmlDocument();
+    //    if (File.Exists(path)) {
+    //        doc.Load(path);
+    //        FromXml((XmlElement)doc.FirstChild);
+    //    }
+    //}
+    //public void Save(string path)
+    //{
+    //    XmlDocument doc = new XmlDocument();
+    //    XmlElement element = ToXml(doc);
+    //    doc.AppendChild(element);
+    //    doc.Save(path);
+    //}
+    //private string totOpmlText(string text)
+    //{
+    //    return Regex.Replace(text, "\r\n", "\n");
+    //}
+    //public XmlElement ToOpml(XmlDocument doc, string name)
+    //{
+    //    XmlElement page = doc.CreateElement(name);
+    //    page.SetAttribute("text", Title);
+    //    page.SetAttribute("_note", totOpmlText(text));
+    //    foreach(TLPage p in SubPages)
+    //    {
+    //        page.AppendChild(p.ToOpml(doc));
+    //    }
+    //    return page;
+    //}
+    //public XmlElement ToOpml(XmlDocument doc)
+    //{
+    //    return ToOpml(doc, "outline");
+    //}
+    //private string fromOpmlText(string title, string text)
+    //{
+    //    string s = Regex.Replace(text, "\n", "\r\n");
+    //    if (s.StartsWith(title)) {
+    //        return s;
+    //    }
+    //    else {
+    //        return title + "\r\n" + s;
+    //    }
+    //}
+    //public void FromOpml(XmlElement element)
+    //{
+    //    string title = element.GetAttribute("text");
+    //    string text = element.GetAttribute("_note");
+    //    Text = fromOpmlText(title, text);
+    //    foreach(XmlNode child in element.ChildNodes)
+    //    {
+    //        if (child is XmlElement )
+    //        {
+    //            TLPage page = new TLPage("", root);
+    //            page.FromOpml((XmlElement)child);
+    //            SubPages.Add(page);
+    //        }
+    //    }
+    //}
+    ///// <summary>
+    ///// Carbonfin Outliner形式のOPMLを読み込む
+    ///// </summary>
+    ///// <param name="path"></param>
+    //public void LoadOPML(string path)
+    //{
+    //    XmlDocument doc = new XmlDocument();
+    //    if (File.Exists(path)) {
+    //        doc.Load(path);
+    //        FromOpml(find_element(doc.DocumentElement, "body"));
+    //    }
+    //}
+    ///// <summary>
+    ///// Carbonfin Outliner形式のOPMLを保存
+    ///// </summary>
+    ///// <param name="path"></param>
+    //public void SaveOPML(string path)
+    //{
+    //    XmlDocument doc = new XmlDocument();
+    //    XmlElement root = doc.CreateElement("opml");
+    //    root.SetAttribute("version", "1.0");
+    //    doc.AppendChild(root);
+    //    XmlElement head = doc.CreateElement("head");
+    //    head.AppendChild(create_text(doc, "title", Title));
+    //    root.AppendChild(head);
+    //    XmlElement body = ToOpml(doc, "body");
+    //    root.AppendChild(body);
+    //    doc.Save(path);
+    //}
+    ///// <summary>
+    ///// WZ形式のテキストに変換
+    ///// </summary>
+    ///// <param name="header"></param>
+    ///// <returns></returns>
+    //public string ToText(string header)
+    //{
+    //    string text = header + Text;
+    //    if (!Regex.IsMatch(text, @"\r\n$") )
+    //    {
+    //        text += "\r\n";
+    //    }
+    //    foreach(TLPage page in SubPages)
+    //    {
+    //        text += page.ToText(header + ".");
+    //    }
+    //    return text;
+    //}
+    TLPage.prototype.StartsWith = function (str, header) {
+        return str.length >= header.length && str.substr(0, header.length) == header;
+    };
+    TLPage.prototype.splitSections = function (sections, header) {
+        var result = new Array();
+        var chapter = null;
+        for (var _i = 0; _i < sections.length; _i++) {
+            var section = sections[_i];
+            if (this.StartsWith(section, header)) {
+                if (chapter == null) {
+                    chapter = new Array();
+                }
+                chapter.push(section.substring(1));
+            }
+            else {
+                if (chapter != null) {
+                    result.push(chapter);
+                }
+                chapter = new Array();
+                chapter.push(section);
+            }
+        }
+        if (chapter != null) {
+            result.push(chapter);
+        }
+        return result;
+    };
+    TLPage.prototype.FromText = function (sections, header) {
+        if (sections.length > 0) {
+            this.Text = sections[0];
+            var sections2 = sections.slice();
+            sections2.shift();
+            for (var _i = 0, _a = this.splitSections(sections2, header); _i < _a.length; _i++) {
+                var chapter = _a[_i];
+                var page = new TLPage("", "", this.root, this.NoTitle);
+                page.FromText(chapter, header);
+                this.SubPages.Add(page);
+            }
+        }
     };
     return TLPage;
 })();
