@@ -16,4 +16,12 @@
     var inputFileElement = <HTMLInputElement>document.getElementById("file");
     treeview.InputFileElement = inputFileElement;
     treeview.draw();
+
+    main_treeview = treeview;
 };
+
+var main_treeview;
+
+function loadXML() {
+    main_treeview.loadXML("sample.xml");
+}

@@ -401,6 +401,15 @@ var TreeView = (function () {
         }
         this.draw();
     };
+    TreeView.prototype.loadXML = function (filename) {
+        // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
+        var request = new XMLHttpRequest();
+        request.open("GET", filename, false);
+        request.send(null);
+        this.clear();
+        this.rootPage.loadXML(request.responseXML.documentElement);
+        this.draw();
+    };
     return TreeView;
 })();
 //# sourceMappingURL=TreeView.js.map
