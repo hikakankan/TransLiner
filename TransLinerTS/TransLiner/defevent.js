@@ -1,25 +1,23 @@
 function def_mouse_event(element, obj) {
-    if (typeof element.ontouchstart === "undefined") {
-        element.onmousedown = function (e) {
-            var rect = e.target.getBoundingClientRect();
-            var x = e.clientX - rect.left;
-            var y = e.clientY - rect.top;
-            obj.mousePressed(x, y);
-        };
-        element.onmouseup = function (e) {
-            var rect = e.target.getBoundingClientRect();
-            var x = e.clientX - rect.left;
-            var y = e.clientY - rect.top;
-            obj.mouseReleased(x, y);
-        };
-        element.onmousemove = function (e) {
-            var rect = e.target.getBoundingClientRect();
-            var x = e.clientX - rect.left;
-            var y = e.clientY - rect.top;
-            obj.mouseMoved(x, y);
-        };
-    }
-    else {
+    element.onmousedown = function (e) {
+        var rect = e.target.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        obj.mousePressed(x, y);
+    };
+    element.onmouseup = function (e) {
+        var rect = e.target.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        obj.mouseReleased(x, y);
+    };
+    element.onmousemove = function (e) {
+        var rect = e.target.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        obj.mouseMoved(x, y);
+    };
+    if (typeof element.ontouchstart !== "undefined") {
         element.ontouchstart = function (event) {
             for (var i = 0; i < event.touches.length; i++) {
                 var e = event.touches[i];
