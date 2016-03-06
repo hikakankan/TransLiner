@@ -22,4 +22,7 @@ var main_treeview;
 function loadXML() {
     main_treeview.loadXML("sample.xml");
 }
+function loadXMLbyFile() {
+    main_treeview.loadXMLbyFile("sample0.xml");
+}
 //# sourceMappingURL=app.js.map

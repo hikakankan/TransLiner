@@ -24,12 +24,17 @@
 }
 
 class TLPage {
-    public constructor(title: string, text: string, root: TLRootPage, private NoTitle: boolean) {
+    public constructor(title: string, text: string, root: TLRootPage, public NoTitle: boolean) {
         this.title = title;
         this.text = text;
         this.root = root;
         this.SubPages = new TLPageCollection();
+        this.loaded = true;
+        this.filename = "";
     }
+
+    private loaded: boolean;  // 分割ロード用
+    private filename: string; // 分割ロード用
 
     protected root: TLRootPage;
 
@@ -101,6 +106,7 @@ class TLPage {
     private text: string = "";
 
     public get Text(): string {
+        this.loadPageFile(); // 分割ロード用
         return this.text;
     }
 
@@ -124,7 +130,14 @@ class TLPage {
     }
 
     public set IsExpanded(value: boolean) {
+        if (value) {
+            this.loadPageFile(); // 分割ロード用
+        }
         this.isExpanded = value;
+    }
+
+    public CanExpand(): boolean {
+        return !this.IsExpanded && (!this.loaded || this.SubPages.Count > 0);
     }
 
     public get SelectedPage(): TLPage {
@@ -457,33 +470,32 @@ class TLPage {
         return false;
     }
 
-    //private XmlElement create_text(XmlDocument doc, string name, string text)
-    //{
-    //    XmlElement element = doc.CreateElement(name);
-    //    XmlText content = doc.CreateTextNode(text);
-    //    element.AppendChild(content);
-    //    return element;
-    //}
+    private create_text(doc: Document, name: string, text: string): Element {
+        var element: Element = doc.createElement(name);
+        var content: Text = doc.createTextNode(text);
+        element.appendChild(content);
+        return element;
+    }
 
-    //public XmlElement ToXml(XmlDocument doc)
-    //{
-    //    XmlElement page = doc.CreateElement("page");
-    //    page.AppendChild(create_text(doc, "title", Title));
-    //    page.AppendChild(create_text(doc, "text", text));
-    //    XmlElement subpages = doc.CreateElement("subpages");
-    //    page.AppendChild(subpages);
-    //    foreach(TLPage p in SubPages)
-    //    {
-    //        subpages.AppendChild(p.ToXml(doc));
-    //    }
-    //    return page;
-    //}
+    public ToXml(doc: Document): Element {
+        var page: Element = doc.createElement("page");
+        page.appendChild(this.create_text(doc, "title", this.Title));
+        page.appendChild(this.create_text(doc, "text", this.text));
+        var subpages: Element = doc.createElement("subpages");
+        page.appendChild(subpages);
+        for (var p of this.SubPages.Collection) {
+            subpages.appendChild(p.ToXml(doc));
+        }
+        return page;
+    }
 
     private find_element(parent: Element, name: string): Element {
         if (parent.hasChildNodes) {
-            var children: NodeListOf<Element> = parent.getElementsByTagName(name);
-            if (children.length > 0) {
-                return children[0];
+            for (var i = 0; i < parent.childNodes.length; i++) {
+                var child: Node = parent.childNodes[i];
+                if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) {
+                    return <Element>child;
+                }
             }
         }
         return null;
@@ -495,34 +507,69 @@ class TLPage {
     }
 
     public FromXml(element: Element): void {
-        this.Text = this.get_text(element, "text");
-        var subpages: Element = this.find_element(element, "subpages");
-        for (var i = 0; i < subpages.childNodes.length; i++) {
-            var child: Node = subpages.childNodes[i];
-            if (child.nodeType == Node.ELEMENT_NODE) {
-                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
-                page.FromXml(<Element>child);
-                this.SubPages.Add(page);
+        this.Title = this.get_text(element, "title");
+        var fileelement: Element = this.find_element(element, "file");
+        if (fileelement == null) {
+            this.loaded = true;
+            this.filename = "";
+            this.Text = this.get_text(element, "text");
+            var subpages: Element = this.find_element(element, "subpages");
+            for (var i = 0; i < subpages.childNodes.length; i++) {
+                var child: Node = subpages.childNodes[i];
+                if (child.nodeType == Node.ELEMENT_NODE) {
+                    var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                    page.FromXml(<Element>child);
+                    this.SubPages.Add(page);
+                }
             }
+        } else {
+            this.loaded = false;
+            this.filename = fileelement.textContent;
         }
     }
 
-    //public void Load(string path)
-    //{
-    //    XmlDocument doc = new XmlDocument();
-    //    if (File.Exists(path)) {
-    //        doc.Load(path);
-    //        FromXml((XmlElement)doc.FirstChild);
-    //    }
-    //}
+    private loadPageFile() {
+        if (!this.loaded) {
+            this.Load(this.filename);
+            this.loaded = true;
+            this.filename = "";
+        }
+    }
 
-    //public void Save(string path)
-    //{
-    //    XmlDocument doc = new XmlDocument();
-    //    XmlElement element = ToXml(doc);
-    //    doc.AppendChild(element);
-    //    doc.Save(path);
-    //}
+    public Load(path: string): void {
+        // ブラウザ側で使う
+        var request = new XMLHttpRequest();
+        request.open("GET", path, false);
+        request.send(null);
+        var doc: Document = request.responseXML;
+        this.FromXml(doc.documentElement);
+    }
+
+    public Save(path: string): void {
+        // ブラウザ側では処理できないので処理はなし
+        var doc: Document = new Document();
+        var element: Element = this.ToXml(doc);
+        doc.appendChild(element);
+        //doc.Save(path);
+    }
+
+    public LoadForNode(path: string): void {
+        // サーバー側 Node.js で使う
+        //var fs = require("fs");
+        //fs.readFile("." + path, "UTF-8", function (err, data) {
+        //    var parser = new DOMParser();
+        //    var doc: Document = parser.parseFromString(data, "text/xml");
+        //    this.FromXml(doc.documentElement);
+        //});
+    }
+
+    public SaveForNode(path: string): void {
+        // サーバー側 Node.js で使う
+        var doc: Document = new Document();
+        var element: Element = this.ToXml(doc);
+        doc.appendChild(element);
+        //doc.Save(path);
+    }
 
     //private string totOpmlText(string text)
     //{

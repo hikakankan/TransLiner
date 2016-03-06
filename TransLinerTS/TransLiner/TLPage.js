@@ -38,6 +38,8 @@ var TLPage = (function () {
         this.text = text;
         this.root = root;
         this.SubPages = new TLPageCollection();
+        this.loaded = true;
+        this.filename = "";
     }
     TLPage.prototype.UnselectAll = function () {
         this.IsSelected = false;
@@ -99,6 +101,7 @@ var TLPage = (function () {
     });
     Object.defineProperty(TLPage.prototype, "Text", {
         get: function () {
+            this.loadPageFile(); // 分割ロード用
             return this.text;
         },
         set: function (value) {
@@ -122,11 +125,17 @@ var TLPage = (function () {
             return this.isExpanded;
         },
         set: function (value) {
+            if (value) {
+                this.loadPageFile(); // 分割ロード用
+            }
             this.isExpanded = value;
         },
         enumerable: true,
         configurable: true
     });
+    TLPage.prototype.CanExpand = function () {
+        return !this.IsExpanded && (!this.loaded || this.SubPages.Count > 0);
+    };
     Object.defineProperty(TLPage.prototype, "SelectedPage", {
         get: function () {
             if (this.IsSelected) {
@@ -443,31 +452,31 @@ var TLPage = (function () {
         }
         return false;
     };
-    //private XmlElement create_text(XmlDocument doc, string name, string text)
-    //{
-    //    XmlElement element = doc.CreateElement(name);
-    //    XmlText content = doc.CreateTextNode(text);
-    //    element.AppendChild(content);
-    //    return element;
-    //}
-    //public XmlElement ToXml(XmlDocument doc)
-    //{
-    //    XmlElement page = doc.CreateElement("page");
-    //    page.AppendChild(create_text(doc, "title", Title));
-    //    page.AppendChild(create_text(doc, "text", text));
-    //    XmlElement subpages = doc.CreateElement("subpages");
-    //    page.AppendChild(subpages);
-    //    foreach(TLPage p in SubPages)
-    //    {
-    //        subpages.AppendChild(p.ToXml(doc));
-    //    }
-    //    return page;
-    //}
+    TLPage.prototype.create_text = function (doc, name, text) {
+        var element = doc.createElement(name);
+        var content = doc.createTextNode(text);
+        element.appendChild(content);
+        return element;
+    };
+    TLPage.prototype.ToXml = function (doc) {
+        var page = doc.createElement("page");
+        page.appendChild(this.create_text(doc, "title", this.Title));
+        page.appendChild(this.create_text(doc, "text", this.text));
+        var subpages = doc.createElement("subpages");
+        page.appendChild(subpages);
+        for (var _i = 0, _a = this.SubPages.Collection; _i < _a.length; _i++) {
+            var p = _a[_i];
+            subpages.appendChild(p.ToXml(doc));
+        }
+        return page;
+    };
     TLPage.prototype.find_element = function (parent, name) {
         if (parent.hasChildNodes) {
-            var children = parent.getElementsByTagName(name);
-            if (children.length > 0) {
-                return children[0];
+            for (var i = 0; i < parent.childNodes.length; i++) {
+                var child = parent.childNodes[i];
+                if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) {
+                    return child;
+                }
             }
         }
         return null;
@@ -477,32 +486,65 @@ var TLPage = (function () {
         return element.textContent;
     };
     TLPage.prototype.FromXml = function (element) {
-        this.Text = this.get_text(element, "text");
-        var subpages = this.find_element(element, "subpages");
-        for (var i = 0; i < subpages.childNodes.length; i++) {
-            var child = subpages.childNodes[i];
-            if (child.nodeType == Node.ELEMENT_NODE) {
-                var page = new TLPage("", "", this.root, this.NoTitle);
-                page.FromXml(child);
-                this.SubPages.Add(page);
+        this.Title = this.get_text(element, "title");
+        var fileelement = this.find_element(element, "file");
+        if (fileelement == null) {
+            this.loaded = true;
+            this.filename = "";
+            this.Text = this.get_text(element, "text");
+            var subpages = this.find_element(element, "subpages");
+            for (var i = 0; i < subpages.childNodes.length; i++) {
+                var child = subpages.childNodes[i];
+                if (child.nodeType == Node.ELEMENT_NODE) {
+                    var page = new TLPage("", "", this.root, this.NoTitle);
+                    page.FromXml(child);
+                    this.SubPages.Add(page);
+                }
             }
         }
+        else {
+            this.loaded = false;
+            this.filename = fileelement.textContent;
+        }
     };
-    //public void Load(string path)
-    //{
-    //    XmlDocument doc = new XmlDocument();
-    //    if (File.Exists(path)) {
-    //        doc.Load(path);
-    //        FromXml((XmlElement)doc.FirstChild);
-    //    }
-    //}
-    //public void Save(string path)
-    //{
-    //    XmlDocument doc = new XmlDocument();
-    //    XmlElement element = ToXml(doc);
-    //    doc.AppendChild(element);
-    //    doc.Save(path);
-    //}
+    TLPage.prototype.loadPageFile = function () {
+        if (!this.loaded) {
+            this.Load(this.filename);
+            this.loaded = true;
+            this.filename = "";
+        }
+    };
+    TLPage.prototype.Load = function (path) {
+        // ブラウザ側で使う
+        var request = new XMLHttpRequest();
+        request.open("GET", path, false);
+        request.send(null);
+        var doc = request.responseXML;
+        this.FromXml(doc.documentElement);
+    };
+    TLPage.prototype.Save = function (path) {
+        // ブラウザ側では処理できないので処理はなし
+        var doc = new Document();
+        var element = this.ToXml(doc);
+        doc.appendChild(element);
+        //doc.Save(path);
+    };
+    TLPage.prototype.LoadForNode = function (path) {
+        // サーバー側 Node.js で使う
+        //var fs = require("fs");
+        //fs.readFile("." + path, "UTF-8", function (err, data) {
+        //    var parser = new DOMParser();
+        //    var doc: Document = parser.parseFromString(data, "text/xml");
+        //    this.FromXml(doc.documentElement);
+        //});
+    };
+    TLPage.prototype.SaveForNode = function (path) {
+        // サーバー側 Node.js で使う
+        var doc = new Document();
+        var element = this.ToXml(doc);
+        doc.appendChild(element);
+        //doc.Save(path);
+    };
     //private string totOpmlText(string text)
     //{
     //    return Regex.Replace(text, "\r\n", "\n");

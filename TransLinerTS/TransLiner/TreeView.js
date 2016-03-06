@@ -99,7 +99,7 @@ var TreeView = (function () {
         return count;
     };
     TreeView.prototype.createTree = function (page, x, y) {
-        if (page.SubPages.Count == 0) {
+        if (!page.CanExpand()) {
             page.IsExpanded = true;
         }
         this.createHeadline(x, y, page);
@@ -403,6 +403,21 @@ var TreeView = (function () {
     };
     TreeView.prototype.loadXML = function (filename) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
+        this.settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
+        this.rootPage.NoTitle = this.settings.NoTitle;
+        var request = new XMLHttpRequest();
+        request.open("GET", filename, false);
+        request.send(null);
+        this.clear();
+        this.rootPage.loadXML(request.responseXML.documentElement);
+        this.draw();
+    };
+    TreeView.prototype.loadXMLbyFile = function (filename) {
+        // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
+        this.settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
+        this.rootPage.NoTitle = this.settings.NoTitle;
         var request = new XMLHttpRequest();
         request.open("GET", filename, false);
         request.send(null);
