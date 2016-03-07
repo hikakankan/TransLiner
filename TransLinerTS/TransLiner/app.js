@@ -25,4 +25,13 @@ function loadXML() {
 function loadXMLbyFile() {
     main_treeview.loadXMLbyFile("sample0.xml");
 }
+function loadJSON() {
+    main_treeview.loadJSON("sample.json");
+}
+function loadJSONbyFile() {
+    main_treeview.loadJSONbyFile("sample0.json");
+}
+function JSONtest() {
+    main_treeview.JSONtest();
+}
 //# sourceMappingURL=app.js.map

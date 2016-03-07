@@ -102,6 +102,11 @@ var TLRootPage = (function (_super) {
         this.SubPages.Clear();
         this.FromXml(xml);
     };
+    TLRootPage.prototype.loadJSON = function (obj) {
+        this.IsExpanded = false;
+        this.SubPages.Clear();
+        this.FromJSON(obj);
+    };
     TLRootPage.prototype.loadText = function (text, path) {
         this.IsExpanded = false;
         this.SubPages.Clear();

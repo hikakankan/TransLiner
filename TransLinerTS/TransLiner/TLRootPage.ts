@@ -114,6 +114,12 @@
         this.FromXml(xml);
     }
 
+    public loadJSON(obj: any): void {
+        this.IsExpanded = false;
+        this.SubPages.Clear();
+        this.FromJSON(obj);
+    }
+
     public loadText(text: string, path: string): void {
         this.IsExpanded = false;
         this.SubPages.Clear();

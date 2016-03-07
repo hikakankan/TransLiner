@@ -40,6 +40,7 @@ var TLPage = (function () {
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
+        this.Load = this.LoadXML;
     }
     TLPage.prototype.UnselectAll = function () {
         this.IsSelected = false;
@@ -470,6 +471,14 @@ var TLPage = (function () {
         }
         return page;
     };
+    TLPage.prototype.ToJSON = function () {
+        var subpages = new Array();
+        for (var _i = 0, _a = this.SubPages.Collection; _i < _a.length; _i++) {
+            var p = _a[_i];
+            subpages.push(p.ToJSON());
+        }
+        return { "Title": this.Title, "Text": this.Text, "SubPages": subpages };
+    };
     TLPage.prototype.find_element = function (parent, name) {
         if (parent.hasChildNodes) {
             for (var i = 0; i < parent.childNodes.length; i++) {
@@ -505,6 +514,28 @@ var TLPage = (function () {
         else {
             this.loaded = false;
             this.filename = fileelement.textContent;
+            this.Load = this.LoadXML;
+        }
+    };
+    TLPage.prototype.FromJSON = function (obj) {
+        this.Title = obj["Title"];
+        var file = obj["File"];
+        if (file == null) {
+            this.loaded = true;
+            this.filename = "";
+            this.Text = obj["Text"];
+            var subpages = obj["SubPages"];
+            for (var i = 0; i < subpages.length; i++) {
+                var child = subpages[i];
+                var page = new TLPage("", "", this.root, this.NoTitle);
+                page.FromJSON(child);
+                this.SubPages.Add(page);
+            }
+        }
+        else {
+            this.loaded = false;
+            this.filename = file;
+            this.Load = this.LoadJSON;
         }
     };
     TLPage.prototype.loadPageFile = function () {
@@ -515,6 +546,9 @@ var TLPage = (function () {
         }
     };
     TLPage.prototype.Load = function (path) {
+        // この関数は LoadXML か LoadJSON のどちらかに設定する
+    };
+    TLPage.prototype.LoadXML = function (path) {
         // ブラウザ側で使う
         var request = new XMLHttpRequest();
         request.open("GET", path, false);
@@ -522,28 +556,15 @@ var TLPage = (function () {
         var doc = request.responseXML;
         this.FromXml(doc.documentElement);
     };
+    TLPage.prototype.LoadJSON = function (path) {
+        // ブラウザ側で使う
+        var request = new XMLHttpRequest();
+        request.open("GET", path, false);
+        request.send(null);
+        this.FromJSON(JSON.parse(request.responseText));
+    };
     TLPage.prototype.Save = function (path) {
         // ブラウザ側では処理できないので処理はなし
-        var doc = new Document();
-        var element = this.ToXml(doc);
-        doc.appendChild(element);
-        //doc.Save(path);
-    };
-    TLPage.prototype.LoadForNode = function (path) {
-        // サーバー側 Node.js で使う
-        //var fs = require("fs");
-        //fs.readFile("." + path, "UTF-8", function (err, data) {
-        //    var parser = new DOMParser();
-        //    var doc: Document = parser.parseFromString(data, "text/xml");
-        //    this.FromXml(doc.documentElement);
-        //});
-    };
-    TLPage.prototype.SaveForNode = function (path) {
-        // サーバー側 Node.js で使う
-        var doc = new Document();
-        var element = this.ToXml(doc);
-        doc.appendChild(element);
-        //doc.Save(path);
     };
     //private string totOpmlText(string text)
     //{

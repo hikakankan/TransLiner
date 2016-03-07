@@ -31,6 +31,7 @@ class TLPage {
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
+        this.Load = this.LoadXML;
     }
 
     private loaded: boolean;  // 分割ロード用
@@ -489,6 +490,14 @@ class TLPage {
         return page;
     }
 
+    public ToJSON(): any {
+        var subpages = new Array();
+        for (var p of this.SubPages.Collection) {
+            subpages.push(p.ToJSON());
+        }
+        return { "Title": this.Title, "Text": this.Text, "SubPages": subpages };
+    }
+
     private find_element(parent: Element, name: string): Element {
         if (parent.hasChildNodes) {
             for (var i = 0; i < parent.childNodes.length; i++) {
@@ -525,6 +534,28 @@ class TLPage {
         } else {
             this.loaded = false;
             this.filename = fileelement.textContent;
+            this.Load = this.LoadXML;
+        }
+    }
+
+    public FromJSON(obj: any): void {
+        this.Title = obj["Title"];
+        var file = obj["File"];
+        if (file == null) {
+            this.loaded = true;
+            this.filename = "";
+            this.Text = obj["Text"];
+            var subpages = obj["SubPages"];
+            for (var i = 0; i < subpages.length; i++) {
+                var child = subpages[i];
+                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                page.FromJSON(child);
+                this.SubPages.Add(page);
+            }
+        } else {
+            this.loaded = false;
+            this.filename = file;
+            this.Load = this.LoadJSON;
         }
     }
 
@@ -537,6 +568,10 @@ class TLPage {
     }
 
     public Load(path: string): void {
+        // この関数は LoadXML か LoadJSON のどちらかに設定する
+    }
+
+    public LoadXML(path: string): void {
         // ブラウザ側で使う
         var request = new XMLHttpRequest();
         request.open("GET", path, false);
@@ -545,30 +580,16 @@ class TLPage {
         this.FromXml(doc.documentElement);
     }
 
+    public LoadJSON(path: string): void {
+        // ブラウザ側で使う
+        var request = new XMLHttpRequest();
+        request.open("GET", path, false);
+        request.send(null);
+        this.FromJSON(JSON.parse(request.responseText));
+    }
+
     public Save(path: string): void {
         // ブラウザ側では処理できないので処理はなし
-        var doc: Document = new Document();
-        var element: Element = this.ToXml(doc);
-        doc.appendChild(element);
-        //doc.Save(path);
-    }
-
-    public LoadForNode(path: string): void {
-        // サーバー側 Node.js で使う
-        //var fs = require("fs");
-        //fs.readFile("." + path, "UTF-8", function (err, data) {
-        //    var parser = new DOMParser();
-        //    var doc: Document = parser.parseFromString(data, "text/xml");
-        //    this.FromXml(doc.documentElement);
-        //});
-    }
-
-    public SaveForNode(path: string): void {
-        // サーバー側 Node.js で使う
-        var doc: Document = new Document();
-        var element: Element = this.ToXml(doc);
-        doc.appendChild(element);
-        //doc.Save(path);
     }
 
     //private string totOpmlText(string text)
