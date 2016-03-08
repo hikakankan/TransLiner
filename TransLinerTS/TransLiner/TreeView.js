@@ -406,11 +406,10 @@ var TreeView = (function () {
         this.settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.NoTitle = this.settings.NoTitle;
-        var request = new XMLHttpRequest();
-        request.open("GET", filename, false);
-        request.send(null);
+        this.rootPage.IsExpanded = false;
+        this.rootPage.SubPages.Clear();
         this.clear();
-        this.rootPage.loadXML(request.responseXML.documentElement);
+        this.rootPage.LoadXML(filename);
         this.draw();
     };
     TreeView.prototype.loadXMLbyFile = function (filename) {
@@ -418,11 +417,10 @@ var TreeView = (function () {
         this.settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.NoTitle = this.settings.NoTitle;
-        var request = new XMLHttpRequest();
-        request.open("GET", filename, false);
-        request.send(null);
+        this.rootPage.IsExpanded = false;
+        this.rootPage.SubPages.Clear();
         this.clear();
-        this.rootPage.loadXML(request.responseXML.documentElement);
+        this.rootPage.LoadXML(filename);
         this.draw();
     };
     TreeView.prototype.loadJSON = function (filename) {
@@ -430,11 +428,10 @@ var TreeView = (function () {
         this.settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.NoTitle = this.settings.NoTitle;
-        var request = new XMLHttpRequest();
-        request.open("GET", filename, false);
-        request.send(null);
+        this.rootPage.IsExpanded = false;
+        this.rootPage.SubPages.Clear();
         this.clear();
-        this.rootPage.loadJSON(JSON.parse(request.responseText));
+        this.rootPage.LoadJSON(filename);
         this.draw();
     };
     TreeView.prototype.loadJSONbyFile = function (filename) {
@@ -442,11 +439,10 @@ var TreeView = (function () {
         this.settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.NoTitle = this.settings.NoTitle;
-        var request = new XMLHttpRequest();
-        request.open("GET", filename, false);
-        request.send(null);
+        this.rootPage.IsExpanded = false;
+        this.rootPage.SubPages.Clear();
         this.clear();
-        this.rootPage.loadJSON(JSON.parse(request.responseText));
+        this.rootPage.LoadJSON(filename);
         this.draw();
     };
     TreeView.prototype.JSONtest = function () {

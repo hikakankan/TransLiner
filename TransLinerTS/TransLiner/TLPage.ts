@@ -31,7 +31,6 @@ class TLPage {
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
-        this.Load = this.LoadXML;
     }
 
     private loaded: boolean;  // 分割ロード用
@@ -534,7 +533,6 @@ class TLPage {
         } else {
             this.loaded = false;
             this.filename = fileelement.textContent;
-            this.Load = this.LoadXML;
         }
     }
 
@@ -555,7 +553,6 @@ class TLPage {
         } else {
             this.loaded = false;
             this.filename = file;
-            this.Load = this.LoadJSON;
         }
     }
 
@@ -567,8 +564,21 @@ class TLPage {
         }
     }
 
+    private get_ext(file: string) {
+        var index = file.lastIndexOf(".");
+        if (index >= 0) {
+            return file.substring(index + 1);
+        }
+        return "";
+    }
+
     public Load(path: string): void {
-        // この関数は LoadXML か LoadJSON のどちらかに設定する
+        // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
+        if (this.get_ext(path) == "xml") {
+            this.LoadXML(path);
+        } else {
+            this.LoadJSON(path);
+        }
     }
 
     public LoadXML(path: string): void {

@@ -40,7 +40,6 @@ var TLPage = (function () {
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
-        this.Load = this.LoadXML;
     }
     TLPage.prototype.UnselectAll = function () {
         this.IsSelected = false;
@@ -514,7 +513,6 @@ var TLPage = (function () {
         else {
             this.loaded = false;
             this.filename = fileelement.textContent;
-            this.Load = this.LoadXML;
         }
     };
     TLPage.prototype.FromJSON = function (obj) {
@@ -535,7 +533,6 @@ var TLPage = (function () {
         else {
             this.loaded = false;
             this.filename = file;
-            this.Load = this.LoadJSON;
         }
     };
     TLPage.prototype.loadPageFile = function () {
@@ -545,8 +542,21 @@ var TLPage = (function () {
             this.filename = "";
         }
     };
+    TLPage.prototype.get_ext = function (file) {
+        var index = file.lastIndexOf(".");
+        if (index >= 0) {
+            return file.substring(index + 1);
+        }
+        return "";
+    };
     TLPage.prototype.Load = function (path) {
-        // この関数は LoadXML か LoadJSON のどちらかに設定する
+        // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
+        if (this.get_ext(path) == "xml") {
+            this.LoadXML(path);
+        }
+        else {
+            this.LoadJSON(path);
+        }
     };
     TLPage.prototype.LoadXML = function (path) {
         // ブラウザ側で使う
