@@ -31,6 +31,7 @@ class TLPage {
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
+        this.path = "";
     }
 
     private loaded: boolean;  // 分割ロード用
@@ -568,9 +569,45 @@ class TLPage {
         }
     }
 
+    private path: string;
+
+    // パスからページを取得
+    public getPageByPath(path: string[]): TLPage {
+        if (path.length == 0) {
+            return this;
+        } else {
+            var index = Number(path[0]);
+            if (index >= 0 && index < this.SubPages.Count) {
+                var page: TLPage = this.SubPages.Collection[index].getPageByPath(path.slice(1));
+            }
+        }
+        return null;
+    }
+
+    public getPageByPathString(path: string): TLPage {
+        return this.getPageByPath(path.split("/").slice(1));
+    }
+
+    // 現在ロードされているすべてのページにパスを設定する
+    public setPath(path: string): void {
+        this.path = path;
+        if (this.loaded) {
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
+                subpage.setPath(path + "/" + String(i));
+            }
+        }
+    }
+
     private loadPageFile() {
         if (!this.loaded) {
-            this.Load(this.filename);
+            if (this.filename != "") {
+                this.Load(this.filename);
+            } else {
+                // ページごとのロード
+                this.root.setPath("/");
+                this.Load("tlcom.command?name=getpage&path=" + this.path);
+            }
             this.loaded = true;
             this.filename = "";
         }
@@ -744,8 +781,7 @@ class TLPage {
     public FromText(sections: string[], header: string): void {
         if (sections.length > 0) {
             this.Text = sections[0];
-            var sections2 = sections.slice();
-            sections2.shift();
+            var sections2 = sections.slice(1);
             for (var chapter of this.splitSections(sections2, header)) {
                 var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
                 page.FromText(chapter, header);

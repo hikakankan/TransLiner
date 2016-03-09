@@ -40,6 +40,7 @@ var TLPage = (function () {
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
+        this.path = "";
     }
     TLPage.prototype.UnselectAll = function () {
         this.IsSelected = false;
@@ -549,9 +550,42 @@ var TLPage = (function () {
             }
         }
     };
+    // パスからページを取得
+    TLPage.prototype.getPageByPath = function (path) {
+        if (path.length == 0) {
+            return this;
+        }
+        else {
+            var index = Number(path[0]);
+            if (index >= 0 && index < this.SubPages.Count) {
+                var page = this.SubPages.Collection[index].getPageByPath(path.slice(1));
+            }
+        }
+        return null;
+    };
+    TLPage.prototype.getPageByPathString = function (path) {
+        return this.getPageByPath(path.split("/").slice(1));
+    };
+    // 現在ロードされているすべてのページにパスを設定する
+    TLPage.prototype.setPath = function (path) {
+        this.path = path;
+        if (this.loaded) {
+            for (var i = 0; i < this.SubPages.Count; i++) {
+                var subpage = this.SubPages.Collection[i];
+                subpage.setPath(path + "/" + String(i));
+            }
+        }
+    };
     TLPage.prototype.loadPageFile = function () {
         if (!this.loaded) {
-            this.Load(this.filename);
+            if (this.filename != "") {
+                this.Load(this.filename);
+            }
+            else {
+                // ページごとのロード
+                this.root.setPath("/");
+                this.Load("tlcom.command?name=getpage&path=" + this.path);
+            }
             this.loaded = true;
             this.filename = "";
         }
@@ -711,8 +745,7 @@ var TLPage = (function () {
     TLPage.prototype.FromText = function (sections, header) {
         if (sections.length > 0) {
             this.Text = sections[0];
-            var sections2 = sections.slice();
-            sections2.shift();
+            var sections2 = sections.slice(1);
             for (var _i = 0, _a = this.splitSections(sections2, header); _i < _a.length; _i++) {
                 var chapter = _a[_i];
                 var page = new TLPage("", "", this.root, this.NoTitle);
