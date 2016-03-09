@@ -496,43 +496,57 @@ var TLPage = (function () {
     TLPage.prototype.FromXml = function (element) {
         this.Title = this.get_text(element, "title");
         var fileelement = this.find_element(element, "file");
-        if (fileelement == null) {
-            this.loaded = true;
-            this.filename = "";
-            this.Text = this.get_text(element, "text");
-            var subpages = this.find_element(element, "subpages");
-            for (var i = 0; i < subpages.childNodes.length; i++) {
-                var child = subpages.childNodes[i];
-                if (child.nodeType == Node.ELEMENT_NODE) {
-                    var page = new TLPage("", "", this.root, this.NoTitle);
-                    page.FromXml(child);
-                    this.SubPages.Add(page);
-                }
-            }
-        }
-        else {
+        if (fileelement != null) {
             this.loaded = false;
             this.filename = fileelement.textContent;
+        }
+        else {
+            var subpages = this.find_element(element, "subpages");
+            if (subpages != null) {
+                this.loaded = true;
+                this.filename = "";
+                this.Text = this.get_text(element, "text");
+                for (var i = 0; i < subpages.childNodes.length; i++) {
+                    var child = subpages.childNodes[i];
+                    if (child.nodeType == Node.ELEMENT_NODE) {
+                        var page = new TLPage("", "", this.root, this.NoTitle);
+                        page.FromXml(child);
+                        this.SubPages.Add(page);
+                    }
+                }
+            }
+            else {
+                // ファイルが指定されていなくてサブページもないときはページごとのロード
+                this.loaded = false;
+                this.filename = "";
+            }
         }
     };
     TLPage.prototype.FromJSON = function (obj) {
         this.Title = obj["Title"];
         var file = obj["File"];
-        if (file == null) {
-            this.loaded = true;
-            this.filename = "";
-            this.Text = obj["Text"];
-            var subpages = obj["SubPages"];
-            for (var i = 0; i < subpages.length; i++) {
-                var child = subpages[i];
-                var page = new TLPage("", "", this.root, this.NoTitle);
-                page.FromJSON(child);
-                this.SubPages.Add(page);
-            }
-        }
-        else {
+        if (file != null) {
             this.loaded = false;
             this.filename = file;
+        }
+        else {
+            var subpages = obj["SubPages"];
+            if (subpages != null) {
+                this.loaded = true;
+                this.filename = "";
+                this.Text = obj["Text"];
+                for (var i = 0; i < subpages.length; i++) {
+                    var child = subpages[i];
+                    var page = new TLPage("", "", this.root, this.NoTitle);
+                    page.FromJSON(child);
+                    this.SubPages.Add(page);
+                }
+            }
+            else {
+                // ファイルが指定されていなくてサブページもないときはページごとのロード
+                this.loaded = false;
+                this.filename = "";
+            }
         }
     };
     TLPage.prototype.loadPageFile = function () {
