@@ -586,6 +586,10 @@ class TLPage {
 
     private pagePath: string;
 
+    public getPagePath(): string {
+        return this.pagePath;
+    }
+
     // パスからページを取得
     public getPageByPath(path: string[]): TLPage {
         if (path.length == 0) {

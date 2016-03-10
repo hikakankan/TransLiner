@@ -8,6 +8,7 @@ var TLRootPage = (function (_super) {
     __extends(TLRootPage, _super);
     function TLRootPage(title, text, settings) {
         _super.call(this, title, text, null, settings);
+        this.serverSide = false; // サーバー側で実行する場合
         this.root = this;
     }
     Object.defineProperty(TLRootPage.prototype, "SelectedPage", {
@@ -35,56 +36,183 @@ var TLRootPage = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    TLRootPage.prototype.MoveLeftUp = function () {
+    TLRootPage.prototype.execCommand = function (command, actual_proc) {
+        if (this.Settings.NoServer || this.serverSide) {
+            // サーバーを使わないか、サーバー側のときは実際に動作する処理を行う
+            return actual_proc();
+        }
+        else {
+            // サーバーを使うときのブラウザ側の処理 コマンドを送信
+            this.setPath("0");
+            var path = this.SelectedPage.getPagePath();
+            var request = new XMLHttpRequest();
+            request.open("GET", "tlcom.command?name=" + command + "&path=" + path, false);
+            request.send(null);
+            return request.responseText == "true";
+        }
+    };
+    TLRootPage.prototype.receiveCommand = function (command) {
+        // コマンドを受け取ったサーバー側の処理
+        if (command == "MoveLeftUp") {
+            return this.MoveLeftUp_();
+        }
+        else if (command == "MoveLeftDown") {
+            return this.MoveLeftDown_();
+        }
+        else if (command == "MoveUpRightTop") {
+            return this.MoveUpRightTop_();
+        }
+        else if (command == "MoveUpRightBottom") {
+            return this.MoveUpRightBottom_();
+        }
+        else if (command == "MoveDownRightTop") {
+            return this.MoveDownRightTop_();
+        }
+        else if (command == "MoveDownRightBottom") {
+            return this.MoveDownRightBottom_();
+        }
+        else if (command == "MoveUp") {
+            return this.MoveUp_();
+        }
+        else if (command == "MoveDown") {
+            return this.MoveDown_();
+        }
+        else if (command == "CreateUp") {
+            return this.CreateUp_();
+        }
+        else if (command == "CreateDown") {
+            return this.CreateDown_();
+        }
+        else if (command == "CreateRightTop") {
+            return this.CreateRightTop_();
+        }
+        else if (command == "CreateRightBottom") {
+            return this.CreateRightBottom_();
+        }
+        else if (command == "DuplicateUp") {
+            return this.DuplicateUp_();
+        }
+        else if (command == "DuplicateDown") {
+            return this.DuplicateDown_();
+        }
+        else if (command == "DuplicateRightTop") {
+            return this.DuplicateRightTop_();
+        }
+        else if (command == "DuplicateRightBottom") {
+            return this.DuplicateRightBottom_();
+        }
+        else if (command == "DeleteSelectedItem") {
+            return this.DeleteSelectedItem_();
+        }
+        else if (command == "Expand") {
+            return this.Expand_();
+        }
+        else if (command == "Unexpand") {
+            return this.Unexpand_();
+        }
+        return false;
+    };
+    TLRootPage.prototype.MoveLeftUp_ = function () {
         return this.MoveLeft(null, -1, null, -1, 0);
     };
-    TLRootPage.prototype.MoveLeftDown = function () {
+    TLRootPage.prototype.MoveLeftUp = function () {
+        return this.execCommand("MoveLeftUp", this.MoveLeftUp_);
+    };
+    TLRootPage.prototype.MoveLeftDown_ = function () {
         return this.MoveLeft(null, -1, null, -1, 1);
     };
-    TLRootPage.prototype.MoveUpRightTop = function () {
+    TLRootPage.prototype.MoveLeftDown = function () {
+        return this.execCommand("MoveLeftDown", this.MoveLeftDown_);
+    };
+    TLRootPage.prototype.MoveUpRightTop_ = function () {
         return this.MoveRight(null, -1, -1, -1, true);
     };
-    TLRootPage.prototype.MoveUpRightBottom = function () {
+    TLRootPage.prototype.MoveUpRightTop = function () {
+        return this.execCommand("MoveUpRightTop", this.MoveUpRightTop_);
+    };
+    TLRootPage.prototype.MoveUpRightBottom_ = function () {
         return this.MoveRight(null, -1, -1, -1, false);
     };
-    TLRootPage.prototype.MoveDownRightTop = function () {
+    TLRootPage.prototype.MoveUpRightBottom = function () {
+        return this.execCommand("MoveUpRightBottom", this.MoveUpRightBottom_);
+    };
+    TLRootPage.prototype.MoveDownRightTop_ = function () {
         return this.MoveRight(null, -1, 1, 0, true);
     };
-    TLRootPage.prototype.MoveDownRightBottom = function () {
+    TLRootPage.prototype.MoveDownRightTop = function () {
+        return this.execCommand("MoveDownRightTop", this.MoveDownRightTop_);
+    };
+    TLRootPage.prototype.MoveDownRightBottom_ = function () {
         return this.MoveRight(null, -1, 1, 0, false);
     };
-    TLRootPage.prototype.MoveUp = function () {
+    TLRootPage.prototype.MoveDownRightBottom = function () {
+        return this.execCommand("MoveDownRightBottom", this.MoveDownRightBottom_);
+    };
+    TLRootPage.prototype.MoveUp_ = function () {
         return this.Move(null, -1, -1) || this.MoveLeftUp();
     };
-    TLRootPage.prototype.MoveDown = function () {
+    TLRootPage.prototype.MoveUp = function () {
+        return this.execCommand("MoveUp", this.MoveUp_);
+    };
+    TLRootPage.prototype.MoveDown_ = function () {
         return this.Move(null, -1, 1) || this.MoveLeftDown();
     };
-    TLRootPage.prototype.CreateUp = function () {
+    TLRootPage.prototype.MoveDown = function () {
+        return this.execCommand("MoveDown", this.MoveDown_);
+    };
+    TLRootPage.prototype.CreateUp_ = function () {
         return this.Create(null, -1, 0);
     };
-    TLRootPage.prototype.CreateDown = function () {
+    TLRootPage.prototype.CreateUp = function () {
+        return this.execCommand("CreateUp", this.CreateUp_);
+    };
+    TLRootPage.prototype.CreateDown_ = function () {
         return this.Create(null, -1, 1);
     };
-    TLRootPage.prototype.CreateRightTop = function () {
+    TLRootPage.prototype.CreateDown = function () {
+        return this.execCommand("CreateDown", this.CreateDown_);
+    };
+    TLRootPage.prototype.CreateRightTop_ = function () {
         return this.CreateRight(null, -1, true);
     };
-    TLRootPage.prototype.CreateRightBottom = function () {
+    TLRootPage.prototype.CreateRightTop = function () {
+        return this.execCommand("CreateRightTop", this.CreateRightTop_);
+    };
+    TLRootPage.prototype.CreateRightBottom_ = function () {
         return this.CreateRight(null, -1, false);
     };
-    TLRootPage.prototype.DuplicateUp = function () {
+    TLRootPage.prototype.CreateRightBottom = function () {
+        return this.execCommand("CreateRightBottom", this.CreateRightBottom_);
+    };
+    TLRootPage.prototype.DuplicateUp_ = function () {
         return this.Duplicate(null, -1, 0);
     };
-    TLRootPage.prototype.DuplicateDown = function () {
+    TLRootPage.prototype.DuplicateUp = function () {
+        return this.execCommand("DuplicateUp", this.DuplicateUp_);
+    };
+    TLRootPage.prototype.DuplicateDown_ = function () {
         return this.Duplicate(null, -1, 1);
     };
-    TLRootPage.prototype.DuplicateRightTop = function () {
+    TLRootPage.prototype.DuplicateDown = function () {
+        return this.execCommand("DuplicateDown", this.DuplicateDown_);
+    };
+    TLRootPage.prototype.DuplicateRightTop_ = function () {
         return this.DuplicateRight(null, -1, true);
     };
-    TLRootPage.prototype.DuplicateRightBottom = function () {
+    TLRootPage.prototype.DuplicateRightTop = function () {
+        return this.execCommand("DuplicateRightTop", this.DuplicateRightTop_);
+    };
+    TLRootPage.prototype.DuplicateRightBottom_ = function () {
         return this.DuplicateRight(null, -1, false);
     };
-    TLRootPage.prototype.DeleteSelectedItem = function () {
+    TLRootPage.prototype.DuplicateRightBottom = function () {
+        return this.execCommand("DuplicateRightBottom", this.DuplicateRightBottom_);
+    };
+    TLRootPage.prototype.DeleteSelectedItem_ = function () {
         return this.Delete(null, -1);
+    };
+    TLRootPage.prototype.DeleteSelectedItem = function () {
+        return this.execCommand("DeleteSelectedItem", this.DeleteSelectedItem_);
     };
     TLRootPage.prototype.SelectedUp = function () {
         return this.SelectedMove(null, -1, -1);
@@ -92,11 +220,19 @@ var TLRootPage = (function (_super) {
     TLRootPage.prototype.SelectedDown = function () {
         return this.SelectedMove(null, -1, 1);
     };
-    TLRootPage.prototype.Expand = function () {
+    TLRootPage.prototype.Expand_ = function () {
         return this.ExpandedChange(null, -1, true);
     };
-    TLRootPage.prototype.Unexpand = function () {
+    TLRootPage.prototype.Expand = function () {
+        //return this.execCommand("Expand", this.Expand_);
+        return this.Expand_();
+    };
+    TLRootPage.prototype.Unexpand_ = function () {
         return this.ExpandedChange(null, -1, false);
+    };
+    TLRootPage.prototype.Unexpand = function () {
+        //return this.execCommand("Unexpand", this.Unexpand_);
+        return this.Unexpand_();
     };
     TLRootPage.prototype.loadXML = function (xml) {
         this.IsExpanded = false;

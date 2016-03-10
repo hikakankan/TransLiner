@@ -26,72 +26,201 @@ class TLRootPage extends TLPage {
         }
     }
 
-    public MoveLeftUp(): boolean {
+    private serverSide = false; // サーバー側で実行する場合
+
+    private execCommand(command: string, actual_proc: () => boolean): boolean {
+        if (this.Settings.NoServer || this.serverSide) {
+            // サーバーを使わないか、サーバー側のときは実際に動作する処理を行う
+            return actual_proc();
+        } else {
+            // サーバーを使うときのブラウザ側の処理 コマンドを送信
+            this.setPath("0");
+            var path: string = this.SelectedPage.getPagePath();
+            var request = new XMLHttpRequest();
+            request.open("GET", "tlcom.command?name=" + command + "&path=" + path, false);
+            request.send(null);
+            return request.responseText == "true";
+        }
+    }
+
+    private receiveCommand(command: string): boolean {
+        // コマンドを受け取ったサーバー側の処理
+        if (command == "MoveLeftUp") {
+            return this.MoveLeftUp_();
+        } else if (command == "MoveLeftDown") {
+            return this.MoveLeftDown_();
+        } else if (command == "MoveUpRightTop") {
+            return this.MoveUpRightTop_();
+        } else if (command == "MoveUpRightBottom") {
+            return this.MoveUpRightBottom_();
+        } else if (command == "MoveDownRightTop") {
+            return this.MoveDownRightTop_();
+        } else if (command == "MoveDownRightBottom") {
+            return this.MoveDownRightBottom_();
+        } else if (command == "MoveUp") {
+            return this.MoveUp_();
+        } else if (command == "MoveDown") {
+            return this.MoveDown_();
+        } else if (command == "CreateUp") {
+            return this.CreateUp_();
+        } else if (command == "CreateDown") {
+            return this.CreateDown_();
+        } else if (command == "CreateRightTop") {
+            return this.CreateRightTop_();
+        } else if (command == "CreateRightBottom") {
+            return this.CreateRightBottom_();
+        } else if (command == "DuplicateUp") {
+            return this.DuplicateUp_();
+        } else if (command == "DuplicateDown") {
+            return this.DuplicateDown_();
+        } else if (command == "DuplicateRightTop") {
+            return this.DuplicateRightTop_();
+        } else if (command == "DuplicateRightBottom") {
+            return this.DuplicateRightBottom_();
+        } else if (command == "DeleteSelectedItem") {
+            return this.DeleteSelectedItem_();
+        } else if (command == "Expand") {
+            return this.Expand_();
+        } else if (command == "Unexpand") {
+            return this.Unexpand_();
+        }
+        return false;
+    }
+
+    public MoveLeftUp_(): boolean {
         return this.MoveLeft(null, -1, null, -1, 0);
     }
 
-    public MoveLeftDown(): boolean {
+    public MoveLeftUp(): boolean {
+        return this.execCommand("MoveLeftUp", this.MoveLeftUp_);
+    }
+
+    public MoveLeftDown_(): boolean {
         return this.MoveLeft(null, -1, null, -1, 1);
     }
 
-    private MoveUpRightTop(): boolean {
+    public MoveLeftDown(): boolean {
+        return this.execCommand("MoveLeftDown", this.MoveLeftDown_);
+    }
+
+    private MoveUpRightTop_(): boolean {
         return this.MoveRight(null, -1, -1, -1, true);
     }
 
-    public MoveUpRightBottom(): boolean {
+    private MoveUpRightTop(): boolean {
+        return this.execCommand("MoveUpRightTop", this.MoveUpRightTop_);
+    }
+
+    public MoveUpRightBottom_(): boolean {
         return this.MoveRight(null, -1, -1, -1, false);
     }
 
-    public MoveDownRightTop(): boolean {
+    public MoveUpRightBottom(): boolean {
+        return this.execCommand("MoveUpRightBottom", this.MoveUpRightBottom_);
+    }
+
+    public MoveDownRightTop_(): boolean {
         return this.MoveRight(null, -1, 1, 0, true);
     }
 
-    private MoveDownRightBottom(): boolean {
+    public MoveDownRightTop(): boolean {
+        return this.execCommand("MoveDownRightTop", this.MoveDownRightTop_);
+    }
+
+    private MoveDownRightBottom_(): boolean {
         return this.MoveRight(null, -1, 1, 0, false);
     }
 
-    public MoveUp(): boolean {
+    private MoveDownRightBottom(): boolean {
+        return this.execCommand("MoveDownRightBottom", this.MoveDownRightBottom_);
+    }
+
+    public MoveUp_(): boolean {
         return this.Move(null, -1, -1) || this.MoveLeftUp();
     }
 
-    public MoveDown(): boolean {
+    public MoveUp(): boolean {
+        return this.execCommand("MoveUp", this.MoveUp_);
+    }
+
+    public MoveDown_(): boolean {
         return this.Move(null, -1, 1) || this.MoveLeftDown();
     }
 
-    public CreateUp(): boolean {
+    public MoveDown(): boolean {
+        return this.execCommand("MoveDown", this.MoveDown_);
+    }
+
+    public CreateUp_(): boolean {
         return this.Create(null, -1, 0);
     }
 
-    public CreateDown(): boolean {
+    public CreateUp(): boolean {
+        return this.execCommand("CreateUp", this.CreateUp_);
+    }
+
+    public CreateDown_(): boolean {
         return this.Create(null, -1, 1);
     }
 
-    public CreateRightTop(): boolean {
+    public CreateDown(): boolean {
+        return this.execCommand("CreateDown", this.CreateDown_);
+    }
+
+    public CreateRightTop_(): boolean {
         return this.CreateRight(null, -1, true);
     }
 
-    public CreateRightBottom(): boolean {
+    public CreateRightTop(): boolean {
+        return this.execCommand("CreateRightTop", this.CreateRightTop_);
+    }
+
+    public CreateRightBottom_(): boolean {
         return this.CreateRight(null, -1, false);
     }
 
-    public DuplicateUp(): boolean {
+    public CreateRightBottom(): boolean {
+        return this.execCommand("CreateRightBottom", this.CreateRightBottom_);
+    }
+
+    public DuplicateUp_(): boolean {
         return this.Duplicate(null, -1, 0);
     }
 
-    public DuplicateDown(): boolean {
+    public DuplicateUp(): boolean {
+        return this.execCommand("DuplicateUp", this.DuplicateUp_);
+    }
+
+    public DuplicateDown_(): boolean {
         return this.Duplicate(null, -1, 1);
     }
 
-    private DuplicateRightTop(): boolean {
+    public DuplicateDown(): boolean {
+        return this.execCommand("DuplicateDown", this.DuplicateDown_);
+    }
+
+    private DuplicateRightTop_(): boolean {
         return this.DuplicateRight(null, -1, true);
     }
 
-    private DuplicateRightBottom(): boolean {
+    private DuplicateRightTop(): boolean {
+        return this.execCommand("DuplicateRightTop", this.DuplicateRightTop_);
+    }
+
+    private DuplicateRightBottom_(): boolean {
         return this.DuplicateRight(null, -1, false);
     }
 
-    public DeleteSelectedItem(): boolean {
+    private DuplicateRightBottom(): boolean {
+        return this.execCommand("DuplicateRightBottom", this.DuplicateRightBottom_);
+    }
+
+    public DeleteSelectedItem_(): boolean {
         return this.Delete(null, -1);
+    }
+
+    public DeleteSelectedItem(): boolean {
+        return this.execCommand("DeleteSelectedItem", this.DeleteSelectedItem_);
     }
 
     private SelectedUp(): boolean {
@@ -102,12 +231,22 @@ class TLRootPage extends TLPage {
         return this.SelectedMove(null, -1, 1);
     }
 
-    public Expand(): boolean {
+    public Expand_(): boolean {
         return this.ExpandedChange(null, -1, true);
     }
 
-    public Unexpand(): boolean {
+    public Expand(): boolean {
+        //return this.execCommand("Expand", this.Expand_);
+        return this.Expand_();
+    }
+
+    public Unexpand_(): boolean {
         return this.ExpandedChange(null, -1, false);
+    }
+
+    public Unexpand(): boolean {
+        //return this.execCommand("Unexpand", this.Unexpand_);
+        return this.Unexpand_();
     }
 
     public loadXML(xml: Element): void {

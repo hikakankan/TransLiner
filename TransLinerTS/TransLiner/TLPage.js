@@ -566,6 +566,9 @@ var TLPage = (function () {
             }
         }
     };
+    TLPage.prototype.getPagePath = function () {
+        return this.pagePath;
+    };
     // パスからページを取得
     TLPage.prototype.getPageByPath = function (path) {
         if (path.length == 0) {
