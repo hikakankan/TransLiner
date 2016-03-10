@@ -87,6 +87,10 @@ var TLPage = (function () {
         get: function () {
             var title = this.getTitle(this.text);
             if (title == "") {
+                if (this.title != "") {
+                    // ページごとにロードしたときここにタイトルが入っている
+                    return this.title;
+                }
                 return "タイトルなし";
             }
             else {
@@ -94,9 +98,8 @@ var TLPage = (function () {
             }
         },
         set: function (title) {
-            if (!this.Settings.NoTitle) {
-                this.title = title;
-            }
+            // ページごとにロードしたときのため、タイトルなしのときもここにタイトルを入れておく
+            this.title = title;
         },
         enumerable: true,
         configurable: true

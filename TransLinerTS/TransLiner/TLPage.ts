@@ -93,6 +93,10 @@ class TLPage {
     public get Title(): string {
         var title: string = this.getTitle(this.text);
         if (title == "") {
+            if (this.title != "") {
+                // ページごとにロードしたときここにタイトルが入っている
+                return this.title;
+            }
             return "タイトルなし";
         }
         else {
@@ -101,9 +105,8 @@ class TLPage {
     }
 
     public set Title(title: string) {
-        if (!this.Settings.NoTitle) {
-            this.title = title;
-        }
+         // ページごとにロードしたときのため、タイトルなしのときもここにタイトルを入れておく
+        this.title = title;
     }
 
     private text: string = "";

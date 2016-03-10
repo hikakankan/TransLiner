@@ -443,7 +443,6 @@
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
-        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -455,7 +454,6 @@
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = true;  // 編集可能かどうか(trueのとき編集不可)
-        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -467,7 +465,6 @@
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
-        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -479,7 +476,6 @@
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = true;  // 編集可能かどうか(trueのとき編集不可)
-        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -488,6 +484,13 @@
     }
 
     public JSONtest() {
-        this.contentElement.value = JSON.stringify(this.rootPage.ToJSON());
+        //this.contentElement.value = JSON.stringify(this.rootPage.ToJSON());
+        this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.settings.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
+        this.rootPage.IsExpanded = false;
+        this.rootPage.SubPages.Clear();
+        this.clear();
+        this.rootPage.LoadJSON("tlcom.command?name=getpage&path=/");
+        this.draw();
     }
 }
