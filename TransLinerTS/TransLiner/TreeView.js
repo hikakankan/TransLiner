@@ -147,7 +147,7 @@ var TreeView = (function () {
         menu.add(button, i, j, itemwidth);
     };
     TreeView.prototype.createHeadline = function (x, y, page) {
-        var openButton = new TVCheckBox(this.canvas, this.settings, this.radius, page);
+        var openButton = new TVCheckBox(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         openButton.setRect(x, y, this.openButtonWidth, this.lineHeight);
         openButton.setText("＋");
         openButton.setDownText("－");
@@ -172,7 +172,7 @@ var TreeView = (function () {
         else {
             headlineX = x + this.openButtonWidthMargin + this.menuButtonWidthMargin;
         }
-        var headlineButton = new TVCheckTextBox(this.canvas, this.settings, this.radius, page);
+        var headlineButton = new TVCheckTextBox(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         headlineButton.setRect(headlineX, y, this.headlineWidth, this.lineHeight);
         this.buttons.push(headlineButton);
         this.headlineButtons.push(headlineButton);
@@ -197,7 +197,7 @@ var TreeView = (function () {
     };
     TreeView.prototype.createEditMenu = function (x, y, page) {
         var treeview = this;
-        var menuButton = new TVMenu(this.canvas, this.settings, this.radius, page);
+        var menuButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuButton.setRect(x + this.openButtonWidthMargin, y, this.menuButtonWidth, this.lineHeight);
         menuButton.setText("▼");
         menuButton.setDownText("▲");
@@ -223,7 +223,7 @@ var TreeView = (function () {
         };
         this.menus.push(menuButton);
         var p = 0;
-        var menuMoveButton = new TVMenu(this.canvas, this.settings, this.radius, page);
+        var menuMoveButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuMoveButton.setUpDownText("移動");
         menuButton.add(menuMoveButton, p++, 1, this.menuButtonWidth2);
         this.addButton(menuMoveButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.MoveUp(); });
@@ -232,19 +232,19 @@ var TreeView = (function () {
         this.addButton(menuMoveButton, page, 1, 1, this.menuButtonWidth, "+", function (root) { return root.MoveDownRightTop(); });
         this.addButton(menuMoveButton, page, -1, -1, this.menuButtonWidth, "+", function (root) { return root.MoveLeftUp(); });
         this.addButton(menuMoveButton, page, -1, 1, this.menuButtonWidth, "+", function (root) { return root.MoveLeftDown(); });
-        var menuCreateButton = new TVMenu(this.canvas, this.settings, this.radius, page);
+        var menuCreateButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuCreateButton.setUpDownText("作成");
         menuButton.add(menuCreateButton, p++, 1, this.menuButtonWidth2);
         this.addButton(menuCreateButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.CreateUp(); });
         this.addButton(menuCreateButton, page, 0, 1, this.menuButtonWidth, "+", function (root) { return root.CreateDown(); });
         this.addButton(menuCreateButton, page, 1, -1, this.menuButtonWidth, "+", function (root) { return root.CreateRightTop(); });
         this.addButton(menuCreateButton, page, 1, 1, this.menuButtonWidth, "+", function (root) { return root.CreateRightBottom(); });
-        var menuDuplicateButton = new TVMenu(this.canvas, this.settings, this.radius, page);
+        var menuDuplicateButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuDuplicateButton.setUpDownText("複製");
         menuButton.add(menuDuplicateButton, p++, 1, this.menuButtonWidth2);
         this.addButton(menuDuplicateButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.DuplicateUp(); });
         this.addButton(menuDuplicateButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.DuplicateDown(); });
-        var menuDeleteButton = new TVMenu(this.canvas, this.settings, this.radius, page);
+        var menuDeleteButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuDeleteButton.setUpDownText("削除");
         menuButton.add(menuDeleteButton, p++, 1, this.menuButtonWidth2);
         this.addButton(menuDeleteButton, page, 0, 1, this.menuButtonWidth2, "OK", function (root) { return root.DeleteSelectedItem(); });
@@ -310,7 +310,7 @@ var TreeView = (function () {
         }
         if (this.contentElement != null) {
             this.contentElement.value = contentText;
-            if (this.settings.NoTitle) {
+            if (this.rootPage.Settings.NoTitle) {
                 this.contentElement.focus();
             }
         }
@@ -403,9 +403,9 @@ var TreeView = (function () {
     };
     TreeView.prototype.loadXML = function (filename) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
-        this.settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
-        this.rootPage.NoTitle = this.settings.NoTitle;
+        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -414,9 +414,9 @@ var TreeView = (function () {
     };
     TreeView.prototype.loadXMLbyFile = function (filename) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
-        this.settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.rootPage.Settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
-        this.rootPage.NoTitle = this.settings.NoTitle;
+        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -425,9 +425,9 @@ var TreeView = (function () {
     };
     TreeView.prototype.loadJSON = function (filename) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
-        this.settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
-        this.rootPage.NoTitle = this.settings.NoTitle;
+        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
@@ -436,9 +436,9 @@ var TreeView = (function () {
     };
     TreeView.prototype.loadJSONbyFile = function (filename) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
-        this.settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        this.rootPage.Settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
-        this.rootPage.NoTitle = this.settings.NoTitle;
+        //this.rootPage.Settings = this.settings.NoTitle;
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();

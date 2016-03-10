@@ -1,6 +1,8 @@
-﻿class TLRootPage extends TLPage {
-    public constructor(title: string, text: string, NoTitle: boolean) {
-        super(title, text, null, NoTitle);
+﻿//var TLPage = require("./TLPageServer.js"); // サーバー用
+
+class TLRootPage extends TLPage {
+    public constructor(title: string, text: string, settings: TLPageSettings) {
+        super(title, text, null, settings);
         this.root = this;
     }
 
@@ -591,3 +593,6 @@
     //    }
     //}
 }
+
+//module.exports = TLRootPage; // サーバー用
+

@@ -30,6 +30,7 @@
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="defevent.ts" />
     <TypeScriptCompile Include="TLPage.ts" />
+    <TypeScriptCompile Include="TLPageSettings.ts" />
     <TypeScriptCompile Include="TLRootPage.ts" />
     <TypeScriptCompile Include="TLSettings.ts" />
     <TypeScriptCompile Include="TreeView.ts" />

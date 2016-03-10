@@ -1,4 +1,6 @@
-﻿class TLPageCollection {
+﻿//var fs = require("fs"); // サーバー用
+
+class TLPageCollection {
     public Collection: Array<TLPage>;
     public constructor() {
         this.Collection = new Array<TLPage>();
@@ -24,14 +26,14 @@
 }
 
 class TLPage {
-    public constructor(title: string, text: string, root: TLRootPage, public NoTitle: boolean) {
+    public constructor(title: string, text: string, root: TLRootPage, public Settings: TLPageSettings) {
         this.title = title;
         this.text = text;
         this.root = root;
         this.SubPages = new TLPageCollection();
         this.loaded = true;
         this.filename = "";
-        this.path = "";
+        this.pagePath = "";
     }
 
     private loaded: boolean;  // 分割ロード用
@@ -74,7 +76,7 @@ class TLPage {
     private title = "";
 
     private getTitle(text: string): string {
-        if (this.NoTitle) {
+        if (this.Settings.NoTitle) {
             var line: string = this.getLine(text);
             if (line.length <= this.title_length) {
                 return line;
@@ -99,7 +101,7 @@ class TLPage {
     }
 
     public set Title(title: string) {
-        if (!this.NoTitle) {
+        if (!this.Settings.NoTitle) {
             this.title = title;
         }
     }
@@ -344,7 +346,7 @@ class TLPage {
     public Create(parent: TLPage, myIndex: number, dest: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
-                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                var page: TLPage = new TLPage("", "", this.root, this.Settings);
                 parent.SubPages.Insert(myIndex + dest, page);
                 page.IsSelected = true;
                 return true;
@@ -364,7 +366,7 @@ class TLPage {
     public CreateRight(parent: TLPage, myIndex: number, destTop: boolean): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
-                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                var page: TLPage = new TLPage("", "", this.root, this.Settings);
                 if (destTop) {
                     this.SubPages.Insert(0, page);
                 }
@@ -417,7 +419,7 @@ class TLPage {
     }
 
     public Clone(): TLPage {
-        var page: TLPage = new TLPage(this.Title, this.Text, this.root, this.NoTitle);
+        var page: TLPage = new TLPage(this.Title, this.Text, this.root, this.Settings);
         for (var i: number = 0; i < this.SubPages.Count; i++) {
             var subpage: TLPage = this.SubPages.Collection[i].Clone();
             page.SubPages.Add(subpage);
@@ -485,7 +487,13 @@ class TLPage {
         var subpages: Element = doc.createElement("subpages");
         page.appendChild(subpages);
         for (var p of this.SubPages.Collection) {
-            subpages.appendChild(p.ToXml(doc));
+            if (this.Settings.PageLoad) {
+                var subpage: Element = doc.createElement("page");
+                subpage.appendChild(this.create_text(doc, "title", p.Title));
+                subpages.appendChild(subpage);
+            } else {
+                subpages.appendChild(p.ToXml(doc));
+            }
         }
         return page;
     }
@@ -493,7 +501,11 @@ class TLPage {
     public ToJSON(): any {
         var subpages = new Array();
         for (var p of this.SubPages.Collection) {
-            subpages.push(p.ToJSON());
+            if (this.Settings.PageLoad) {
+                subpages.push({ "Title": p.Title });
+            } else {
+                subpages.push(p.ToJSON());
+            }
         }
         return { "Title": this.Title, "Text": this.Text, "SubPages": subpages };
     }
@@ -530,7 +542,7 @@ class TLPage {
                 for (var i = 0; i < subpages.childNodes.length; i++) {
                     var child: Node = subpages.childNodes[i];
                     if (child.nodeType == Node.ELEMENT_NODE) {
-                        var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                        var page: TLPage = new TLPage("", "", this.root, this.Settings);
                         page.FromXml(<Element>child);
                         this.SubPages.Add(page);
                     }
@@ -557,7 +569,7 @@ class TLPage {
                 this.Text = obj["Text"];
                 for (var i = 0; i < subpages.length; i++) {
                     var child = subpages[i];
-                    var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                    var page: TLPage = new TLPage("", "", this.root, this.Settings);
                     page.FromJSON(child);
                     this.SubPages.Add(page);
                 }
@@ -569,7 +581,7 @@ class TLPage {
         }
     }
 
-    private path: string;
+    private pagePath: string;
 
     // パスからページを取得
     public getPageByPath(path: string[]): TLPage {
@@ -578,7 +590,7 @@ class TLPage {
         } else {
             var index = Number(path[0]);
             if (index >= 0 && index < this.SubPages.Count) {
-                var page: TLPage = this.SubPages.Collection[index].getPageByPath(path.slice(1));
+                return this.SubPages.Collection[index].getPageByPath(path.slice(1));
             }
         }
         return null;
@@ -590,7 +602,7 @@ class TLPage {
 
     // 現在ロードされているすべてのページにパスを設定する
     public setPath(path: string): void {
-        this.path = path;
+        this.pagePath = path;
         if (this.loaded) {
             for (var i: number = 0; i < this.SubPages.Count; i++) {
                 var subpage: TLPage = this.SubPages.Collection[i];
@@ -605,8 +617,8 @@ class TLPage {
                 this.Load(this.filename);
             } else {
                 // ページごとのロード
-                this.root.setPath("/");
-                this.Load("tlcom.command?name=getpage&path=" + this.path);
+                this.root.setPath("0");
+                this.Load("tlcom.command?name=getpage&path=" + this.pagePath);
             }
             this.loaded = true;
             this.filename = "";
@@ -630,6 +642,20 @@ class TLPage {
         }
     }
 
+    // サーバー用
+    //TLPage.prototype.Load = function (path) {
+    //    // サーバー側 Node.js で使う
+    //    var this_ = this;
+    //    fs.readFile("./" + path, "UTF-8", function (err, data) {
+    //        if (err) {
+    //            console.log("readFile error");
+    //            throw err;
+    //        }
+    //        var obj = JSON.parse(data);
+    //        this_.FromJSON(obj);
+    //    });
+    //};
+
     public LoadXML(path: string): void {
         // ブラウザ側で使う
         var request = new XMLHttpRequest();
@@ -650,6 +676,19 @@ class TLPage {
     public Save(path: string): void {
         // ブラウザ側では処理できないので処理はなし
     }
+
+    // サーバー用
+    //TLPage.prototype.Save = function (path) {
+    //    // サーバー側 Node.js で使う
+    //    var obj = this.ToJSON();
+    //    var data = JSON.stringify(obj);
+    //    fs.writeFile("./" + path, data, "UTF-8", function (err) {
+    //        if (err) {
+    //            console.log("writeFile error");
+    //            throw err;
+    //        }
+    //    });
+    //};
 
     //private string totOpmlText(string text)
     //{
@@ -783,7 +822,7 @@ class TLPage {
             this.Text = sections[0];
             var sections2 = sections.slice(1);
             for (var chapter of this.splitSections(sections2, header)) {
-                var page: TLPage = new TLPage("", "", this.root, this.NoTitle);
+                var page: TLPage = new TLPage("", "", this.root, this.Settings);
                 page.FromText(chapter, header);
                 this.SubPages.Add(page);
             }
@@ -835,3 +874,6 @@ class TLPage {
     //    }
     //}
 }
+
+//module.exports = TLPage; // サーバー用
+

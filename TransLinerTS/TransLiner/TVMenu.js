@@ -5,9 +5,11 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var TVCheckBox = (function (_super) {
     __extends(TVCheckBox, _super);
-    function TVCheckBox(element, settings, cornerRadius, page) {
+    //private NoTitle: boolean;
+    function TVCheckBox(element, settings, cornerRadius, page, NoTitle) {
         _super.call(this, element, settings, page.Title);
-        this.NoTitle = settings.NoTitle;
+        this.NoTitle = NoTitle;
+        //this.NoTitle = settings.NoTitle;
         this.page = page;
     }
     TVCheckBox.prototype.clear = function (gc, color) {
@@ -48,8 +50,8 @@ var TVCheckBox = (function (_super) {
 })(WYCheckBox);
 var TVCheckTextBox = (function (_super) {
     __extends(TVCheckTextBox, _super);
-    function TVCheckTextBox(element, settings, cornerRadius, page) {
-        _super.call(this, element, settings, cornerRadius, page);
+    function TVCheckTextBox(element, settings, cornerRadius, page, NoTitle) {
+        _super.call(this, element, settings, cornerRadius, page, NoTitle);
     }
     return TVCheckTextBox;
 })(TVCheckBox);
@@ -82,8 +84,8 @@ var TVButton = (function (_super) {
 })(WYRoundButton);
 var TVMenu = (function (_super) {
     __extends(TVMenu, _super);
-    function TVMenu(element, settings, cornerRadius, page) {
-        _super.call(this, element, settings, cornerRadius, page);
+    function TVMenu(element, settings, cornerRadius, page, NoTitle) {
+        _super.call(this, element, settings, cornerRadius, page, NoTitle);
         this.xmargin = 2;
         this.ymargin = 2;
         this.widths_shift = 1;

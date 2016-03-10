@@ -1,9 +1,9 @@
 ﻿class TVCheckBox extends WYCheckBox {
     private page: TLPage;
-    private NoTitle: boolean;
-    public constructor(element: HTMLCanvasElement, settings: ViewSettings, cornerRadius: number, page: TLPage) {
+    //private NoTitle: boolean;
+    public constructor(element: HTMLCanvasElement, settings: ViewSettings, cornerRadius: number, page: TLPage, private NoTitle: boolean) {
         super(element, settings, page.Title);
-        this.NoTitle = settings.NoTitle;
+        //this.NoTitle = settings.NoTitle;
         this.page = page;
     }
     public clear(gc: CanvasRenderingContext2D, color: WYColor) {
@@ -39,8 +39,8 @@
 }
 
 class TVCheckTextBox extends TVCheckBox {
-    public constructor(element: HTMLCanvasElement, settings: ViewSettings, cornerRadius: number, page: TLPage) {
-        super(element, settings, cornerRadius, page);
+    public constructor(element: HTMLCanvasElement, settings: ViewSettings, cornerRadius: number, page: TLPage, NoTitle: boolean) {
+        super(element, settings, cornerRadius, page, NoTitle);
     }
 }
 
@@ -73,8 +73,8 @@ class TVMenu extends TVCheckBox {
     private ymargin = 2;
     private widths: number[][];
     private widths_shift = 1;
-    public constructor(element: HTMLCanvasElement, settings: ViewSettings, cornerRadius: number, page: TLPage) {
-        super(element, settings, cornerRadius, page);
+    public constructor(element: HTMLCanvasElement, settings: ViewSettings, cornerRadius: number, page: TLPage, NoTitle: boolean) {
+        super(element, settings, cornerRadius, page, NoTitle);
         this.submenus = new Array<TVMenu | TVButton>();
     }
     private getWidths(i: number, j: number): number {

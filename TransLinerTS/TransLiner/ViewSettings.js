@@ -19,7 +19,7 @@ var ViewSettings = (function () {
         this.MainFont = new GCDefaultFont();
         this.ImageSettings = new ImageSettings(); // イメージの設定
         this.UseImage = false; // イメージを使うかどうか
-        this.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        //this.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
     }
     return ViewSettings;

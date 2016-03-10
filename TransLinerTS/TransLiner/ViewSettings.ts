@@ -16,7 +16,7 @@
     public MainFont: GCDefaultFont;
     public ImageSettings: ImageSettings;
     public UseImage: boolean;
-    public NoTitle: boolean;
+    //public NoTitle: boolean;
     public NoEdit: boolean;
 
     public constructor() {
@@ -43,7 +43,7 @@
         this.ImageSettings = new ImageSettings();			// イメージの設定
         this.UseImage = false;						// イメージを使うかどうか
 
-        this.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
+        //this.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
         this.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
     }
 }

@@ -1,3 +1,4 @@
+//var TLPage = require("./TLPageServer.js"); // サーバー用
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -5,8 +6,8 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var TLRootPage = (function (_super) {
     __extends(TLRootPage, _super);
-    function TLRootPage(title, text, NoTitle) {
-        _super.call(this, title, text, null, NoTitle);
+    function TLRootPage(title, text, settings) {
+        _super.call(this, title, text, null, settings);
         this.root = this;
     }
     Object.defineProperty(TLRootPage.prototype, "SelectedPage", {
@@ -156,4 +157,5 @@ var TLRootPage = (function (_super) {
     };
     return TLRootPage;
 })(TLPage);
+//module.exports = TLRootPage; // サーバー用
 //# sourceMappingURL=TLRootPage.js.map
