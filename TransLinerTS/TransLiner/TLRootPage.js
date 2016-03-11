@@ -1,4 +1,4 @@
-//var TLPage = require("./TLPageServer.js"); // サーバー用
+//<server>var TLPage = require("./TLPageServer.js"); // サーバー用
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -8,10 +8,13 @@ var TLRootPage = (function (_super) {
     __extends(TLRootPage, _super);
     function TLRootPage(title, text, settings) {
         _super.call(this, title, text, null, settings);
-        this.serverSide = false; // サーバー側で実行する場合
+        this.serverSide = false; // ブラウザ側で実行する //<browser> ブラウザ用
         this.root = this;
     }
     Object.defineProperty(TLRootPage.prototype, "SelectedPage", {
+        get: function () {
+            return this.SelectedPage_;
+        },
         set: function (page) {
             this.UnselectAll();
             page.IsSelected = true;
@@ -36,6 +39,7 @@ var TLRootPage = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    //<server>private serverSide = true; // サーバー側で実行する
     TLRootPage.prototype.execCommand = function (command, actual_proc) {
         if (this.Settings.NoServer || this.serverSide) {
             // サーバーを使わないか、サーバー側のときは実際に動作する処理を行う
@@ -48,7 +52,7 @@ var TLRootPage = (function (_super) {
             var request = new XMLHttpRequest();
             request.open("GET", "tlcom.command?name=" + command + "&path=" + path, false);
             request.send(null);
-            return request.responseText == "true";
+            return request.responseText == "true" && actual_proc(); // ブラウザ側のツリーも更新
         }
     };
     TLRootPage.prototype.receiveCommand = function (command) {
@@ -149,13 +153,13 @@ var TLRootPage = (function (_super) {
         return this.execCommand("MoveDownRightBottom", this.MoveDownRightBottom_);
     };
     TLRootPage.prototype.MoveUp_ = function () {
-        return this.Move(null, -1, -1) || this.MoveLeftUp();
+        return this.Move(null, -1, -1) || this.MoveLeftUp_();
     };
     TLRootPage.prototype.MoveUp = function () {
         return this.execCommand("MoveUp", this.MoveUp_);
     };
     TLRootPage.prototype.MoveDown_ = function () {
-        return this.Move(null, -1, 1) || this.MoveLeftDown();
+        return this.Move(null, -1, 1) || this.MoveLeftDown_();
     };
     TLRootPage.prototype.MoveDown = function () {
         return this.execCommand("MoveDown", this.MoveDown_);
@@ -293,5 +297,5 @@ var TLRootPage = (function (_super) {
     };
     return TLRootPage;
 })(TLPage);
-//module.exports = TLRootPage; // サーバー用
+//<server>module.exports = TLRootPage; // サーバー用
 //# sourceMappingURL=TLRootPage.js.map

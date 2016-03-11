@@ -3,4 +3,4 @@
     public PageLoad: boolean = false; // ページごとのロードをするかどうか
     public NoServer: boolean = false; // サーバーを使うかどうか
 }
-//module.exports = TLPageSettings; // サーバー用
+//<server>module.exports = TLPageSettings; // サーバー用

@@ -1,4 +1,4 @@
-//var fs = require("fs"); // サーバー用
+//<server>var fs = require("fs"); // サーバー用
 var TLPageCollection = (function () {
     function TLPageCollection() {
         this.Collection = new Array();
@@ -141,7 +141,7 @@ var TLPage = (function () {
     TLPage.prototype.CanExpand = function () {
         return !this.IsExpanded && (!this.loaded || this.SubPages.Count > 0);
     };
-    Object.defineProperty(TLPage.prototype, "SelectedPage", {
+    Object.defineProperty(TLPage.prototype, "SelectedPage_", {
         get: function () {
             if (this.IsSelected) {
                 return this;
@@ -149,7 +149,7 @@ var TLPage = (function () {
             else {
                 for (var _i = 0, _a = this.SubPages.Collection; _i < _a.length; _i++) {
                     var page = _a[_i];
-                    var selectedPage = page.SelectedPage;
+                    var selectedPage = page.SelectedPage_;
                     if (selectedPage != null) {
                         return selectedPage;
                     }
@@ -499,6 +499,7 @@ var TLPage = (function () {
         if (parent.hasChildNodes) {
             for (var i = 0; i < parent.childNodes.length; i++) {
                 var child = parent.childNodes[i];
+                //<server/browser>if (child.nodeType == global.ELEMENT_NODE && child.nodeName == name) {
                 if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) {
                     return child;
                 }
@@ -525,6 +526,7 @@ var TLPage = (function () {
                 this.Text = this.get_text(element, "text");
                 for (var i = 0; i < subpages.childNodes.length; i++) {
                     var child = subpages.childNodes[i];
+                    //<server/browser>if (child.nodeType == global.ELEMENT_NODE) {
                     if (child.nodeType == Node.ELEMENT_NODE) {
                         var page = new TLPage("", "", this.root, this.Settings);
                         page.FromXml(child);
@@ -617,6 +619,7 @@ var TLPage = (function () {
         return "";
     };
     TLPage.prototype.Load = function (path) {
+        //<browser/begin> ブラウザ用開始
         // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
         if (this.get_ext(path) == "xml") {
             this.LoadXML(path);
@@ -624,6 +627,17 @@ var TLPage = (function () {
         else {
             this.LoadJSON(path);
         }
+        //<browser/end> ブラウザ用終了
+        //<server>// サーバー側 Node.js で使う
+        //<server>var this_ = this;
+        //<server>fs.readFile("./" + path, "UTF-8", function (err, data) {
+        //<server>    if (err) {
+        //<server>        console.log("readFile error");
+        //<server>        throw err;
+        //<server>    }
+        //<server>    var obj = JSON.parse(data);
+        //<server>    this_.FromJSON(obj);
+        //<server>});
     };
     // サーバー用
     //TLPage.prototype.Load = function (path) {
@@ -654,7 +668,16 @@ var TLPage = (function () {
         this.FromJSON(JSON.parse(request.responseText));
     };
     TLPage.prototype.Save = function (path) {
-        // ブラウザ側では処理できないので処理はなし
+        // ブラウザ側では処理できないので処理はなし //<browser> ブラウザ用
+        //<server>// サーバー側 Node.js で使う
+        //<server>var obj = this.ToJSON();
+        //<server>var data = JSON.stringify(obj);
+        //<server>fs.writeFile("./" + path, data, "UTF-8", function (err) {
+        //<server>    if (err) {
+        //<server>        console.log("writeFile error");
+        //<server>        throw err;
+        //<server>    }
+        //<server>});
     };
     // サーバー用
     //TLPage.prototype.Save = function (path) {
@@ -800,5 +823,5 @@ var TLPage = (function () {
     };
     return TLPage;
 })();
-//module.exports = TLPage; // サーバー用
+//<server>module.exports = TLPage; // サーバー用
 //# sourceMappingURL=TLPage.js.map

@@ -1,4 +1,4 @@
-﻿//var fs = require("fs"); // サーバー用
+﻿//<server>var fs = require("fs"); // サーバー用
 
 class TLPageCollection {
     public Collection: Array<TLPage>;
@@ -146,13 +146,13 @@ class TLPage {
         return !this.IsExpanded && (!this.loaded || this.SubPages.Count > 0);
     }
 
-    public get SelectedPage(): TLPage {
+    public get SelectedPage_(): TLPage {
         if (this.IsSelected) {
             return this;
         }
         else {
             for (var page of this.SubPages.Collection) {
-                var selectedPage: TLPage = page.SelectedPage;
+                var selectedPage: TLPage = page.SelectedPage_;
                 if (selectedPage != null) {
                     return selectedPage;
                 }
@@ -517,7 +517,8 @@ class TLPage {
         if (parent.hasChildNodes) {
             for (var i = 0; i < parent.childNodes.length; i++) {
                 var child: Node = parent.childNodes[i];
-                if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) {
+                //<server/browser>if (child.nodeType == global.ELEMENT_NODE && child.nodeName == name) {
+                if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) { // この行はブラウザ用
                     return <Element>child;
                 }
             }
@@ -544,7 +545,8 @@ class TLPage {
                 this.Text = this.get_text(element, "text");
                 for (var i = 0; i < subpages.childNodes.length; i++) {
                     var child: Node = subpages.childNodes[i];
-                    if (child.nodeType == Node.ELEMENT_NODE) {
+                    //<server/browser>if (child.nodeType == global.ELEMENT_NODE) {
+                    if (child.nodeType == Node.ELEMENT_NODE) { // この行はブラウザ用
                         var page: TLPage = new TLPage("", "", this.root, this.Settings);
                         page.FromXml(<Element>child);
                         this.SubPages.Add(page);
@@ -641,12 +643,24 @@ class TLPage {
     }
 
     public Load(path: string): void {
+        //<browser/begin> ブラウザ用開始
         // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
         if (this.get_ext(path) == "xml") {
             this.LoadXML(path);
         } else {
             this.LoadJSON(path);
         }
+        //<browser/end> ブラウザ用終了
+        //<server>// サーバー側 Node.js で使う
+        //<server>var this_ = this;
+        //<server>fs.readFile("./" + path, "UTF-8", function (err, data) {
+        //<server>    if (err) {
+        //<server>        console.log("readFile error");
+        //<server>        throw err;
+        //<server>    }
+        //<server>    var obj = JSON.parse(data);
+        //<server>    this_.FromJSON(obj);
+        //<server>});
     }
 
     // サーバー用
@@ -681,7 +695,16 @@ class TLPage {
     }
 
     public Save(path: string): void {
-        // ブラウザ側では処理できないので処理はなし
+        // ブラウザ側では処理できないので処理はなし //<browser> ブラウザ用
+        //<server>// サーバー側 Node.js で使う
+        //<server>var obj = this.ToJSON();
+        //<server>var data = JSON.stringify(obj);
+        //<server>fs.writeFile("./" + path, data, "UTF-8", function (err) {
+        //<server>    if (err) {
+        //<server>        console.log("writeFile error");
+        //<server>        throw err;
+        //<server>    }
+        //<server>});
     }
 
     // サーバー用
@@ -882,5 +905,5 @@ class TLPage {
     //}
 }
 
-//module.exports = TLPage; // サーバー用
+//<server>module.exports = TLPage; // サーバー用
 

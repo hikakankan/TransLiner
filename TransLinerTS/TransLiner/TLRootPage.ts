@@ -1,9 +1,13 @@
-﻿//var TLPage = require("./TLPageServer.js"); // サーバー用
+﻿//<server>var TLPage = require("./TLPageServer.js"); // サーバー用
 
 class TLRootPage extends TLPage {
     public constructor(title: string, text: string, settings: TLPageSettings) {
         super(title, text, null, settings);
         this.root = this;
+    }
+
+    public get SelectedPage(): TLPage {
+        return this.SelectedPage_;
     }
 
     public set SelectedPage(page: TLPage) {
@@ -26,7 +30,8 @@ class TLRootPage extends TLPage {
         }
     }
 
-    private serverSide = false; // サーバー側で実行する場合
+    private serverSide = false; // ブラウザ側で実行する //<browser> ブラウザ用
+    //<server>private serverSide = true; // サーバー側で実行する
 
     private execCommand(command: string, actual_proc: () => boolean): boolean {
         if (this.Settings.NoServer || this.serverSide) {
@@ -39,7 +44,7 @@ class TLRootPage extends TLPage {
             var request = new XMLHttpRequest();
             request.open("GET", "tlcom.command?name=" + command + "&path=" + path, false);
             request.send(null);
-            return request.responseText == "true";
+            return request.responseText == "true" && actual_proc(); // ブラウザ側のツリーも更新
         }
     }
 
@@ -136,7 +141,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveUp_(): boolean {
-        return this.Move(null, -1, -1) || this.MoveLeftUp();
+        return this.Move(null, -1, -1) || this.MoveLeftUp_();
     }
 
     public MoveUp(): boolean {
@@ -144,7 +149,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveDown_(): boolean {
-        return this.Move(null, -1, 1) || this.MoveLeftDown();
+        return this.Move(null, -1, 1) || this.MoveLeftDown_();
     }
 
     public MoveDown(): boolean {
@@ -733,5 +738,5 @@ class TLRootPage extends TLPage {
     //}
 }
 
-//module.exports = TLRootPage; // サーバー用
+//<server>module.exports = TLRootPage; // サーバー用
 
