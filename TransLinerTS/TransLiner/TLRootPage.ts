@@ -31,7 +31,7 @@ class TLRootPage extends TLPage {
     }
 
     private serverSide = false; // ブラウザ側で実行する //<browser> ブラウザ用
-    //<server>private serverSide = true; // サーバー側で実行する
+    //<server>var serverSide = true; // サーバー側で実行する
 
     private execCommand(command: string, actual_proc: () => boolean): boolean {
         if (this.Settings.NoServer || this.serverSide) {

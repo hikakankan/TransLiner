@@ -39,7 +39,7 @@ var TLRootPage = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    //<server>private serverSide = true; // サーバー側で実行する
+    //<server>var serverSide = true; // サーバー側で実行する
     TLRootPage.prototype.execCommand = function (command, actual_proc) {
         if (this.Settings.NoServer || this.serverSide) {
             // サーバーを使わないか、サーバー側のときは実際に動作する処理を行う
