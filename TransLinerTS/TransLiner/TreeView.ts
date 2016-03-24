@@ -401,6 +401,7 @@
         this.inputFileElement = inputFileElement;
         var treeview = this;
         inputFileElement.addEventListener("change", function () {
+            treeview.rootPage.Settings.SetNoServerMode(); // サーバーを使わないモードに設定する
             var file = inputFileElement.files[0];
             treeview.load(file);
             //treeview.loadX(file);

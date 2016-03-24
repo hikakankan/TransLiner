@@ -50,8 +50,6 @@ class TLPage {
         }
     }
 
-    private title_length = 40;
-
     private getLine(text: string): string {
         var r: number = text.indexOf('\r');
         var n: number = text.indexOf('\n');
@@ -78,11 +76,11 @@ class TLPage {
     private getTitle(text: string): string {
         if (this.Settings.NoTitle) {
             var line: string = this.getLine(text);
-            if (line.length <= this.title_length) {
+            if (line.length <= this.Settings.TitleLength) {
                 return line;
             }
             else {
-                return line.substring(0, this.title_length);
+                return line.substring(0, this.Settings.TitleLength);
             }
         }
         else {

@@ -97,7 +97,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveLeftUp(): boolean {
-        return this.execCommand("MoveLeftUp", this.MoveLeftUp_);
+        return this.execCommand("MoveLeftUp", () => this.MoveLeftUp_());
     }
 
     public MoveLeftDown_(): boolean {
@@ -105,7 +105,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveLeftDown(): boolean {
-        return this.execCommand("MoveLeftDown", this.MoveLeftDown_);
+        return this.execCommand("MoveLeftDown", () => this.MoveLeftDown_());
     }
 
     private MoveUpRightTop_(): boolean {
@@ -113,7 +113,7 @@ class TLRootPage extends TLPage {
     }
 
     private MoveUpRightTop(): boolean {
-        return this.execCommand("MoveUpRightTop", this.MoveUpRightTop_);
+        return this.execCommand("MoveUpRightTop", () => this.MoveUpRightTop_());
     }
 
     public MoveUpRightBottom_(): boolean {
@@ -121,7 +121,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveUpRightBottom(): boolean {
-        return this.execCommand("MoveUpRightBottom", this.MoveUpRightBottom_);
+        return this.execCommand("MoveUpRightBottom", () => this.MoveUpRightBottom_());
     }
 
     public MoveDownRightTop_(): boolean {
@@ -129,7 +129,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveDownRightTop(): boolean {
-        return this.execCommand("MoveDownRightTop", this.MoveDownRightTop_);
+        return this.execCommand("MoveDownRightTop", () => this.MoveDownRightTop_());
     }
 
     private MoveDownRightBottom_(): boolean {
@@ -137,7 +137,7 @@ class TLRootPage extends TLPage {
     }
 
     private MoveDownRightBottom(): boolean {
-        return this.execCommand("MoveDownRightBottom", this.MoveDownRightBottom_);
+        return this.execCommand("MoveDownRightBottom", () => this.MoveDownRightBottom_());
     }
 
     public MoveUp_(): boolean {
@@ -145,7 +145,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveUp(): boolean {
-        return this.execCommand("MoveUp", this.MoveUp_);
+        return this.execCommand("MoveUp", () => this.MoveUp_());
     }
 
     public MoveDown_(): boolean {
@@ -153,7 +153,7 @@ class TLRootPage extends TLPage {
     }
 
     public MoveDown(): boolean {
-        return this.execCommand("MoveDown", this.MoveDown_);
+        return this.execCommand("MoveDown", () => this.MoveDown_());
     }
 
     public CreateUp_(): boolean {
@@ -161,7 +161,7 @@ class TLRootPage extends TLPage {
     }
 
     public CreateUp(): boolean {
-        return this.execCommand("CreateUp", this.CreateUp_);
+        return this.execCommand("CreateUp", () => this.CreateUp_());
     }
 
     public CreateDown_(): boolean {
@@ -169,7 +169,7 @@ class TLRootPage extends TLPage {
     }
 
     public CreateDown(): boolean {
-        return this.execCommand("CreateDown", this.CreateDown_);
+        return this.execCommand("CreateDown", () => this.CreateDown_());
     }
 
     public CreateRightTop_(): boolean {
@@ -177,7 +177,7 @@ class TLRootPage extends TLPage {
     }
 
     public CreateRightTop(): boolean {
-        return this.execCommand("CreateRightTop", this.CreateRightTop_);
+        return this.execCommand("CreateRightTop", () => this.CreateRightTop_());
     }
 
     public CreateRightBottom_(): boolean {
@@ -185,7 +185,7 @@ class TLRootPage extends TLPage {
     }
 
     public CreateRightBottom(): boolean {
-        return this.execCommand("CreateRightBottom", this.CreateRightBottom_);
+        return this.execCommand("CreateRightBottom", () => this.CreateRightBottom_());
     }
 
     public DuplicateUp_(): boolean {
@@ -193,7 +193,7 @@ class TLRootPage extends TLPage {
     }
 
     public DuplicateUp(): boolean {
-        return this.execCommand("DuplicateUp", this.DuplicateUp_);
+        return this.execCommand("DuplicateUp", () => this.DuplicateUp_());
     }
 
     public DuplicateDown_(): boolean {
@@ -201,7 +201,7 @@ class TLRootPage extends TLPage {
     }
 
     public DuplicateDown(): boolean {
-        return this.execCommand("DuplicateDown", this.DuplicateDown_);
+        return this.execCommand("DuplicateDown", () => this.DuplicateDown_());
     }
 
     private DuplicateRightTop_(): boolean {
@@ -209,7 +209,7 @@ class TLRootPage extends TLPage {
     }
 
     private DuplicateRightTop(): boolean {
-        return this.execCommand("DuplicateRightTop", this.DuplicateRightTop_);
+        return this.execCommand("DuplicateRightTop", () => this.DuplicateRightTop_());
     }
 
     private DuplicateRightBottom_(): boolean {
@@ -217,7 +217,7 @@ class TLRootPage extends TLPage {
     }
 
     private DuplicateRightBottom(): boolean {
-        return this.execCommand("DuplicateRightBottom", this.DuplicateRightBottom_);
+        return this.execCommand("DuplicateRightBottom", () => this.DuplicateRightBottom_());
     }
 
     public DeleteSelectedItem_(): boolean {
@@ -225,7 +225,7 @@ class TLRootPage extends TLPage {
     }
 
     public DeleteSelectedItem(): boolean {
-        return this.execCommand("DeleteSelectedItem", this.DeleteSelectedItem_);
+        return this.execCommand("DeleteSelectedItem", () => this.DeleteSelectedItem_());
     }
 
     private SelectedUp(): boolean {

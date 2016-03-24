@@ -30,7 +30,6 @@ var TLPageCollection = (function () {
 var TLPage = (function () {
     function TLPage(title, text, root, Settings) {
         this.Settings = Settings;
-        this.title_length = 40;
         this.title = "";
         this.text = "";
         this.isSelected = false;
@@ -72,11 +71,11 @@ var TLPage = (function () {
     TLPage.prototype.getTitle = function (text) {
         if (this.Settings.NoTitle) {
             var line = this.getLine(text);
-            if (line.length <= this.title_length) {
+            if (line.length <= this.Settings.TitleLength) {
                 return line;
             }
             else {
-                return line.substring(0, this.title_length);
+                return line.substring(0, this.Settings.TitleLength);
             }
         }
         else {
