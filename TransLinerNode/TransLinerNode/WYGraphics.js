@@ -9,14 +9,14 @@ var GCFont = (function () {
         this.Height = height;
     }
     return GCFont;
-})();
+}());
 var GCDefaultFont = (function (_super) {
     __extends(GCDefaultFont, _super);
     function GCDefaultFont() {
         _super.call(this, "16px 'Times New Roman'", 16);
     }
     return GCDefaultFont;
-})(GCFont);
+}(GCFont));
 var WYGraphics = (function () {
     function WYGraphics(graph, font, use_image, image_settings) {
         this.graph = graph;
@@ -217,7 +217,7 @@ var WYGraphics = (function () {
         return new WYFont(this.font, this.graph, this.use_image, this.image_settings);
     };
     return WYGraphics;
-})();
+}());
 var WYFont = (function () {
     function WYFont(font, graph, use_image, image_settings) {
         this.font = font;
@@ -254,7 +254,7 @@ var WYFont = (function () {
         }
     };
     return WYFont;
-})();
+}());
 var WYColor = (function () {
     function WYColor(red, green, blue) {
         this.red = red;
@@ -317,7 +317,7 @@ var WYColor = (function () {
         return c;
     };
     return WYColor;
-})();
+}());
 var WYPoint = (function () {
     function WYPoint(x, y) {
         this.x = x;
@@ -328,14 +328,14 @@ var WYPoint = (function () {
         this.y = y;
     };
     return WYPoint;
-})();
+}());
 var WYDimension = (function () {
     function WYDimension(width, height) {
         this.width = width;
         this.height = height;
     }
     return WYDimension;
-})();
+}());
 var WYRectangle = (function () {
     function WYRectangle(p, d) {
         this.x = p.x;
@@ -344,7 +344,7 @@ var WYRectangle = (function () {
         this.height = d.height;
     }
     return WYRectangle;
-})();
+}());
 var WYRect = (function () {
     function WYRect(left, top, width, height) {
         this.left = left;
@@ -361,5 +361,5 @@ var WYRect = (function () {
         return x >= this.left && x < this.left + this.width && y >= this.top && y < this.top + this.height;
     };
     return WYRect;
-})();
+}());
 //# sourceMappingURL=WYGraphics.js.map

@@ -23,7 +23,7 @@ var ViewSettings = (function () {
         this.NoFocus = false; // テキストを編集するときフォーカスをテキストに移動するかどうか(trueのときフォーカスは移動しない)
     }
     return ViewSettings;
-})();
+}());
 var ImageSettings = (function () {
     function ImageSettings() {
     }
@@ -37,5 +37,5 @@ var ImageSettings = (function () {
         // 実装していません
     };
     return ImageSettings;
-})();
+}());
 //# sourceMappingURL=ViewSettings.js.map

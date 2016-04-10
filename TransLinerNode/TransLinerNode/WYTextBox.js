@@ -29,7 +29,7 @@ var WYTextBox = (function () {
         gc.fill();
     };
     return WYTextBox;
-})();
+}());
 var WYFlatTextBox = (function (_super) {
     __extends(WYFlatTextBox, _super);
     function WYFlatTextBox(gc, settings) {
@@ -62,7 +62,7 @@ var WYFlatTextBox = (function (_super) {
         g.drawString(this.text, this.rect.left + w1 + this.cornerRadius + this.leftMargin, this.rect.top + w1 + this.topMargin);
     };
     return WYFlatTextBox;
-})(WYTextBox);
+}(WYTextBox));
 var WYCanvasBaseTextBox = (function (_super) {
     __extends(WYCanvasBaseTextBox, _super);
     function WYCanvasBaseTextBox(canvas, settings) {
@@ -116,7 +116,7 @@ var WYCanvasBaseTextBox = (function (_super) {
         this.cornerRadius = 10; // 角の半径
     }
     return WYCanvasBaseTextBox;
-})(WYTextBox);
+}(WYTextBox));
 var WYCanvasTextBox = (function (_super) {
     __extends(WYCanvasTextBox, _super);
     function WYCanvasTextBox(canvas, settings) {
@@ -124,7 +124,7 @@ var WYCanvasTextBox = (function (_super) {
         this.init_by_canvas();
     }
     return WYCanvasTextBox;
-})(WYCanvasBaseTextBox);
+}(WYCanvasBaseTextBox));
 var WYTextElement = (function (_super) {
     __extends(WYTextElement, _super);
     function WYTextElement(element) {
@@ -148,7 +148,7 @@ var WYTextElement = (function (_super) {
         this.element = element;
     }
     return WYTextElement;
-})(WYTextBox);
+}(WYTextBox));
 var WYNumericTextBox = (function (_super) {
     __extends(WYNumericTextBox, _super);
     function WYNumericTextBox(gc, settings) {
@@ -183,7 +183,7 @@ var WYNumericTextBox = (function (_super) {
         this.value_step = 1;
     }
     return WYNumericTextBox;
-})(WYFlatTextBox);
+}(WYFlatTextBox));
 var WYNumericSliderTextBox = (function (_super) {
     __extends(WYNumericSliderTextBox, _super);
     function WYNumericSliderTextBox(gc, settings) {
@@ -230,17 +230,18 @@ var WYNumericSliderTextBox = (function (_super) {
         this.mousemove_min_dist = 1;
     }
     return WYNumericSliderTextBox;
-})(WYNumericTextBox);
+}(WYNumericTextBox));
 var WYCanvasNumericSliderTextBox = (function (_super) {
     __extends(WYCanvasNumericSliderTextBox, _super);
     function WYCanvasNumericSliderTextBox(id, settings) {
-        this.canvas = document.getElementById(id);
-        var gc = this.canvas.getContext("2d");
+        var canvas = document.getElementById(id);
+        var gc = canvas.getContext("2d");
         _super.call(this, gc, settings);
+        this, canvas = canvas;
         this.setRect(0, 0, this.canvas.width, this.canvas.height);
     }
     return WYCanvasNumericSliderTextBox;
-})(WYNumericSliderTextBox);
+}(WYNumericSliderTextBox));
 function createTextBox(id, settings, text) {
     var canvas = document.getElementById(id);
     var text_box = new WYCanvasTextBox(canvas, settings);

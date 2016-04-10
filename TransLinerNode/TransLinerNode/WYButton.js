@@ -91,7 +91,7 @@ var WYButton = (function () {
     WYButton.prototype.touchMove = function (x, y) {
     };
     return WYButton;
-})();
+}());
 var WYImageButton = (function (_super) {
     __extends(WYImageButton, _super);
     function WYImageButton(gc) {
@@ -115,7 +115,7 @@ var WYImageButton = (function (_super) {
         }
     };
     return WYImageButton;
-})(WYButton);
+}(WYButton));
 var WYTextButton = (function (_super) {
     __extends(WYTextButton, _super);
     function WYTextButton(gc, settings) {
@@ -137,7 +137,7 @@ var WYTextButton = (function (_super) {
         }
     };
     return WYTextButton;
-})(WYButton);
+}(WYButton));
 var WYFlatButton = (function (_super) {
     __extends(WYFlatButton, _super);
     function WYFlatButton(gc, settings) {
@@ -167,7 +167,7 @@ var WYFlatButton = (function (_super) {
         this.drawText();
     };
     return WYFlatButton;
-})(WYTextButton);
+}(WYTextButton));
 var WYRoundButton = (function (_super) {
     __extends(WYRoundButton, _super);
     function WYRoundButton(gc, settings, cornerRadius) {
@@ -198,7 +198,7 @@ var WYRoundButton = (function (_super) {
         this.drawText();
     };
     return WYRoundButton;
-})(WYTextButton);
+}(WYTextButton));
 var WYGradientButton = (function (_super) {
     __extends(WYGradientButton, _super);
     function WYGradientButton(gc, settings) {
@@ -233,7 +233,7 @@ var WYGradientButton = (function (_super) {
         }
     };
     return WYGradientButton;
-})(WYTextButton);
+}(WYTextButton));
 var WYSliderButton = (function (_super) {
     __extends(WYSliderButton, _super);
     function WYSliderButton(gc, settings) {
@@ -241,5 +241,5 @@ var WYSliderButton = (function (_super) {
         _super.call(this, gc, settings, cornerRadius);
     }
     return WYSliderButton;
-})(WYRoundButton);
+}(WYRoundButton));
 //# sourceMappingURL=WYButton.js.map

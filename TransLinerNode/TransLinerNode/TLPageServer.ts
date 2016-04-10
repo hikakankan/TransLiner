@@ -1,39 +1,34 @@
-//<server>var fs = require("fs"); // サーバー用
-var TLPageCollection = (function () {
-    function TLPageCollection() {
-        this.Collection = new Array();
+﻿import fs = require("fs"); // サーバー用
+import TLRootPage = require("./TLRootPageServer");
+import TLPageSettings = require("./TLPageSettingsServer");
+
+class TLPageCollection {
+    public Collection: Array<TLPage>;
+    public constructor() {
+        this.Collection = new Array<TLPage>();
     }
-    Object.defineProperty(TLPageCollection.prototype, "Count", {
-        get: function () {
-            return this.Collection.length;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TLPageCollection.prototype.Last = function () {
+    public get Count(): number {
+        return this.Collection.length;
+    }
+    public Last(): TLPage {
         return this.Collection[this.Collection.length - 1];
-    };
-    TLPageCollection.prototype.RemoveAt = function (index) {
+    }
+    public RemoveAt(index: number): void {
         this.Collection.splice(index, 1);
-    };
-    TLPageCollection.prototype.Insert = function (index, page) {
+    }
+    public Insert(index: number, page: TLPage): void {
         this.Collection.splice(index, 0, page);
-    };
-    TLPageCollection.prototype.Add = function (page) {
+    }
+    public Add(page: TLPage): void {
         this.Collection.push(page);
-    };
-    TLPageCollection.prototype.Clear = function () {
-        this.Collection = new Array();
-    };
-    return TLPageCollection;
-})();
-var TLPage = (function () {
-    function TLPage(title, text, root, Settings) {
-        this.Settings = Settings;
-        this.title = "";
-        this.text = "";
-        this.isSelected = false;
-        this.isExpanded = false;
+    }
+    public Clear(): void {
+        this.Collection = new Array<TLPage>();
+    }
+}
+
+class TLPage {
+    public constructor(title: string, text: string, root: TLRootPage, public Settings: TLPageSettings) {
         this.title = title;
         this.text = text;
         this.root = root;
@@ -42,15 +37,24 @@ var TLPage = (function () {
         this.filename = "";
         this.pagePath = "";
     }
-    TLPage.prototype.UnselectAll = function () {
+
+    private loaded: boolean;  // 分割ロード用
+    private filename: string; // 分割ロード用
+
+    protected root: TLRootPage;
+
+    public SubPages: TLPageCollection;
+
+    public UnselectAll(): void {
         this.IsSelected = false;
-        for (var i = 0; i < this.SubPages.Count; i++) {
+        for (var i: number = 0; i < this.SubPages.Count; i++) {
             this.SubPages.Collection[i].UnselectAll();
         }
-    };
-    TLPage.prototype.getLine = function (text) {
-        var r = text.indexOf('\r');
-        var n = text.indexOf('\n');
+    }
+
+    private getLine(text: string): string {
+        var r: number = text.indexOf('\r');
+        var n: number = text.indexOf('\n');
         if (r >= 0) {
             if (n >= 0) {
                 return text.substring(0, Math.min(r, n));
@@ -67,10 +71,13 @@ var TLPage = (function () {
                 return text;
             }
         }
-    };
-    TLPage.prototype.getTitle = function (text) {
+    }
+
+    private title = "";
+
+    private getTitle(text: string): string {
         if (this.Settings.NoTitle) {
-            var line = this.getLine(text);
+            var line: string = this.getLine(text);
             if (line.length <= this.Settings.TitleLength) {
                 return line;
             }
@@ -81,93 +88,92 @@ var TLPage = (function () {
         else {
             return this.title;
         }
-    };
-    Object.defineProperty(TLPage.prototype, "Title", {
-        get: function () {
-            var title = this.getTitle(this.text);
-            if (title == "") {
-                if (this.title != "") {
-                    // ページごとにロードしたときここにタイトルが入っている
-                    return this.title;
-                }
-                return "タイトルなし";
+    }
+
+    public get Title(): string {
+        var title: string = this.getTitle(this.text);
+        if (title == "") {
+            if (this.title != "") {
+                // ページごとにロードしたときここにタイトルが入っている
+                return this.title;
             }
-            else {
-                return title;
-            }
-        },
-        set: function (title) {
-            // ページごとにロードしたときのため、タイトルなしのときもここにタイトルを入れておく
-            this.title = title;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TLPage.prototype, "Text", {
-        get: function () {
+            return "タイトルなし";
+        }
+        else {
+            return title;
+        }
+    }
+
+    public set Title(title: string) {
+         // ページごとにロードしたときのため、タイトルなしのときもここにタイトルを入れておく
+        this.title = title;
+    }
+
+    private text: string = "";
+
+    public get Text(): string {
+        this.loadPageFile(); // 分割ロード用
+        return this.text;
+    }
+
+    public set Text(value: string) {
+        this.text = value;
+    }
+
+    private isSelected: boolean = false;
+    private isExpanded: boolean = false;
+
+    public get IsSelected(): boolean {
+        return this.isSelected;
+    }
+
+    public set IsSelected(value: boolean) {
+        this.isSelected = value;
+    }
+
+    public get IsExpanded(): boolean {
+        return this.isExpanded;
+    }
+
+    public set IsExpanded(value: boolean) {
+        if (value) {
             this.loadPageFile(); // 分割ロード用
-            return this.text;
-        },
-        set: function (value) {
-            this.text = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TLPage.prototype, "IsSelected", {
-        get: function () {
-            return this.isSelected;
-        },
-        set: function (value) {
-            this.isSelected = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TLPage.prototype, "IsExpanded", {
-        get: function () {
-            return this.isExpanded;
-        },
-        set: function (value) {
-            if (value) {
-                this.loadPageFile(); // 分割ロード用
-            }
-            this.isExpanded = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TLPage.prototype.CanExpand = function () {
+        }
+        this.isExpanded = value;
+    }
+
+    public CanExpand(): boolean {
         return !this.IsExpanded && (!this.loaded || this.SubPages.Count > 0);
-    };
-    Object.defineProperty(TLPage.prototype, "SelectedPage_", {
-        get: function () {
-            if (this.IsSelected) {
-                return this;
-            }
-            else {
-                for (var _i = 0, _a = this.SubPages.Collection; _i < _a.length; _i++) {
-                    var page = _a[_i];
-                    var selectedPage = page.SelectedPage_;
-                    if (selectedPage != null) {
-                        return selectedPage;
-                    }
+    }
+
+    public get SelectedPage_(): TLPage {
+        if (this.IsSelected) {
+            return this;
+        }
+        else {
+            for (var page of this.SubPages.Collection) {
+                var selectedPage: TLPage = page.SelectedPage_;
+                if (selectedPage != null) {
+                    return selectedPage;
                 }
             }
-            return null;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TLPage.prototype.validIndex = function (index, count) {
+        }
+        return null;
+    }
+
+    private validIndex(index: number, count: number): boolean;
+    private validIndex(index: number): boolean;
+
+    private validIndex(index: number, count?: number): boolean {
         if (count != null) {
             return index >= 0 && index < count;
         }
         else {
             return index >= 0;
         }
-    };
-    TLPage.prototype.MoveLeft = function (parent, myIndex, parentparent, parentIndex, dest) {
+    }
+
+    public MoveLeft(parent: TLPage, myIndex: number, parentparent: TLPage, parentIndex: number, dest: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex) && this.validIndex(parentIndex)) {
                 parent.SubPages.RemoveAt(myIndex);
@@ -176,16 +182,17 @@ var TLPage = (function () {
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.MoveLeft(this, i, parent, myIndex, dest)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.MoveRight = function (parent, myIndex, destBefore, destAfter, destTop) {
+    }
+
+    public MoveRight(parent: TLPage, myIndex: number, destBefore: number, destAfter: number, destTop: boolean): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex) && this.validIndex(myIndex + destBefore, parent.SubPages.Count)) {
                 parent.SubPages.RemoveAt(myIndex);
@@ -202,16 +209,17 @@ var TLPage = (function () {
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.MoveRight(this, i, destBefore, destAfter, destTop)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.Move = function (parent, myIndex, dest) {
+    }
+
+    public Move(parent: TLPage, myIndex: number, dest: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex) && this.validIndex(myIndex + dest, parent.SubPages.Count)) {
                 parent.SubPages.RemoveAt(myIndex);
@@ -220,16 +228,17 @@ var TLPage = (function () {
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.Move(this, i, dest)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.SelectedMove = function (parent, myIndex, dest) {
+    }
+
+    public SelectedMove(parent: TLPage, myIndex: number, dest: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex) && myIndex + dest == -1) {
                 // 先頭の項目が選択されている状態でさらに上に移動すると上位に移動
@@ -257,25 +266,27 @@ var TLPage = (function () {
             return true;
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.SelectedMove(this, i, dest)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.SelectLastExpandedItem = function () {
+    }
+
+    public SelectLastExpandedItem(): void {
         if (this.IsExpanded && this.SubPages.Count > 0) {
             this.SubPages.Last().SelectLastExpandedItem();
         }
         else {
             this.IsSelected = true;
         }
-    };
-    TLPage.prototype.SelectedDownOver = function (parent, myIndex) {
-        var dest = 1;
+    }
+
+    public SelectedDownOver(parent: TLPage, myIndex: number): boolean {
+        var dest: number = 1;
         if (this.IsSelected) {
             if (this.validIndex(myIndex) && myIndex + dest == parent.SubPages.Count) {
                 // 最後尾の項目が選択されている状態でさらに下に移動すると上位の下の項目に移動
@@ -288,16 +299,17 @@ var TLPage = (function () {
             return true;
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.SelectedDownOver(this, i)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.ExpandedChange = function (parent, myIndex, expanded) {
+    }
+
+    public ExpandedChange(parent: TLPage, myIndex: number, expanded: boolean): boolean {
         if (this.IsSelected) {
             if (!this.IsExpanded) {
                 if (!expanded) {
@@ -324,38 +336,40 @@ var TLPage = (function () {
             return true;
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.ExpandedChange(this, i, expanded)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.Create = function (parent, myIndex, dest) {
+    }
+
+    public Create(parent: TLPage, myIndex: number, dest: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
-                var page = new TLPage("", "", this.root, this.Settings);
+                var page: TLPage = new TLPage("", "", this.root, this.Settings);
                 parent.SubPages.Insert(myIndex + dest, page);
                 page.IsSelected = true;
                 return true;
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.Create(this, i, dest)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.CreateRight = function (parent, myIndex, destTop) {
+    }
+
+    public CreateRight(parent: TLPage, myIndex: number, destTop: boolean): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
-                var page = new TLPage("", "", this.root, this.Settings);
+                var page: TLPage = new TLPage("", "", this.root, this.Settings);
                 if (destTop) {
                     this.SubPages.Insert(0, page);
                 }
@@ -368,16 +382,17 @@ var TLPage = (function () {
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.CreateRight(this, i, destTop)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.Delete = function (parent, myIndex) {
+    }
+
+    public Delete(parent: TLPage, myIndex: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
                 parent.SubPages.RemoveAt(myIndex);
@@ -389,52 +404,56 @@ var TLPage = (function () {
                         parent.SubPages.Collection[myIndex - 1].IsSelected = true;
                     }
                     else {
+                        //parent.IsSelected = true;
                     }
                 }
                 return true;
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.Delete(this, i)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.Clone = function () {
-        var page = new TLPage(this.Title, this.Text, this.root, this.Settings);
-        for (var i = 0; i < this.SubPages.Count; i++) {
-            var subpage = this.SubPages.Collection[i].Clone();
+    }
+
+    public Clone(): TLPage {
+        var page: TLPage = new TLPage(this.Title, this.Text, this.root, this.Settings);
+        for (var i: number = 0; i < this.SubPages.Count; i++) {
+            var subpage: TLPage = this.SubPages.Collection[i].Clone();
             page.SubPages.Add(subpage);
         }
         return page;
-    };
-    TLPage.prototype.Duplicate = function (parent, myIndex, dest) {
+    }
+
+    public Duplicate(parent: TLPage, myIndex: number, dest: number): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
-                var page = this.Clone();
+                var page: TLPage = this.Clone();
                 parent.SubPages.Insert(myIndex + dest, page);
                 page.IsSelected = true;
                 return true;
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.Duplicate(this, i, dest)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.DuplicateRight = function (parent, myIndex, destTop) {
+    }
+
+    public DuplicateRight(parent: TLPage, myIndex: number, destTop: boolean): boolean {
         if (this.IsSelected) {
             if (this.validIndex(myIndex)) {
-                var page = this.Clone();
+                var page: TLPage = this.Clone();
                 if (destTop) {
                     this.SubPages.Insert(0, page);
                 }
@@ -447,107 +466,107 @@ var TLPage = (function () {
             }
         }
         else {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 if (subpage.DuplicateRight(this, i, destTop)) {
                     return true;
                 }
             }
         }
         return false;
-    };
-    TLPage.prototype.create_text = function (doc, name, text) {
-        var element = doc.createElement(name);
-        var content = doc.createTextNode(text);
+    }
+
+    private create_text(doc: Document, name: string, text: string): Element {
+        var element: Element = doc.createElement(name);
+        var content: Text = doc.createTextNode(text);
         element.appendChild(content);
         return element;
-    };
-    TLPage.prototype.ToXml = function (doc) {
-        var page = doc.createElement("page");
+    }
+
+    public ToXml(doc: Document): Element {
+        var page: Element = doc.createElement("page");
         page.appendChild(this.create_text(doc, "title", this.Title));
         page.appendChild(this.create_text(doc, "text", this.text));
-        var subpages = doc.createElement("subpages");
+        var subpages: Element = doc.createElement("subpages");
         page.appendChild(subpages);
-        for (var _i = 0, _a = this.SubPages.Collection; _i < _a.length; _i++) {
-            var p = _a[_i];
+        for (var p of this.SubPages.Collection) {
             if (this.Settings.PageLoad) {
-                var subpage = doc.createElement("page");
+                var subpage: Element = doc.createElement("page");
                 subpage.appendChild(this.create_text(doc, "title", p.Title));
                 subpages.appendChild(subpage);
-            }
-            else {
+            } else {
                 subpages.appendChild(p.ToXml(doc));
             }
         }
         return page;
-    };
-    TLPage.prototype.ToJSON = function () {
+    }
+
+    public ToJSON(): any {
         var subpages = new Array();
-        for (var _i = 0, _a = this.SubPages.Collection; _i < _a.length; _i++) {
-            var p = _a[_i];
+        for (var p of this.SubPages.Collection) {
             if (this.Settings.PageLoad) {
                 subpages.push({ "Title": p.Title });
-            }
-            else {
+            } else {
                 subpages.push(p.ToJSON());
             }
         }
         return { "Title": this.Title, "Text": this.Text, "SubPages": subpages };
-    };
-    TLPage.prototype.find_element = function (parent, name) {
+    }
+
+    private find_element(parent: Element, name: string): Element {
         if (parent.hasChildNodes) {
             for (var i = 0; i < parent.childNodes.length; i++) {
-                var child = parent.childNodes[i];
+                var child: Node = parent.childNodes[i];
                 //<server/browser>if (child.nodeType == global.ELEMENT_NODE && child.nodeName == name) {
-                if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) {
-                    return child;
+                if (child.nodeType == Node.ELEMENT_NODE && child.nodeName == name) { // この行はブラウザ用
+                    return <Element>child;
                 }
             }
         }
         return null;
-    };
-    TLPage.prototype.get_text = function (parent, name) {
+    }
+
+    private get_text(parent: Element, name: string): string {
         var element = this.find_element(parent, name);
         return element.textContent;
-    };
-    TLPage.prototype.FromXml = function (element) {
+    }
+
+    public FromXml(element: Element): void {
         this.Title = this.get_text(element, "title");
-        var fileelement = this.find_element(element, "file");
+        var fileelement: Element = this.find_element(element, "file");
         if (fileelement != null) {
             this.loaded = false;
             this.filename = fileelement.textContent;
-        }
-        else {
-            var subpages = this.find_element(element, "subpages");
+        } else {
+            var subpages: Element = this.find_element(element, "subpages");
             if (subpages != null) {
                 this.loaded = true;
                 this.filename = "";
                 this.Text = this.get_text(element, "text");
                 for (var i = 0; i < subpages.childNodes.length; i++) {
-                    var child = subpages.childNodes[i];
+                    var child: Node = subpages.childNodes[i];
                     //<server/browser>if (child.nodeType == global.ELEMENT_NODE) {
-                    if (child.nodeType == Node.ELEMENT_NODE) {
-                        var page = new TLPage("", "", this.root, this.Settings);
-                        page.FromXml(child);
+                    if (child.nodeType == Node.ELEMENT_NODE) { // この行はブラウザ用
+                        var page: TLPage = new TLPage("", "", this.root, this.Settings);
+                        page.FromXml(<Element>child);
                         this.SubPages.Add(page);
                     }
                 }
-            }
-            else {
+            } else {
                 // ファイルが指定されていなくてサブページもないときはページごとのロード
                 this.loaded = false;
                 this.filename = "";
             }
         }
-    };
-    TLPage.prototype.FromJSON = function (obj) {
+    }
+
+    public FromJSON(obj: any): void {
         this.Title = obj["Title"];
         var file = obj["File"];
         if (file != null) {
             this.loaded = false;
             this.filename = file;
-        }
-        else {
+        } else {
             var subpages = obj["SubPages"];
             if (subpages != null) {
                 this.loaded = true;
@@ -555,53 +574,57 @@ var TLPage = (function () {
                 this.Text = obj["Text"];
                 for (var i = 0; i < subpages.length; i++) {
                     var child = subpages[i];
-                    var page = new TLPage("", "", this.root, this.Settings);
+                    var page: TLPage = new TLPage("", "", this.root, this.Settings);
                     page.FromJSON(child);
                     this.SubPages.Add(page);
                 }
-            }
-            else {
+            } else {
                 // ファイルが指定されていなくてサブページもないときはページごとのロード
                 this.loaded = false;
                 this.filename = "";
             }
         }
-    };
-    TLPage.prototype.getPagePath = function () {
+    }
+
+    private pagePath: string;
+
+    public getPagePath(): string {
         return this.pagePath;
-    };
+    }
+
     // パスからページを取得
-    TLPage.prototype.getPageByPath = function (path) {
+    public getPageByPath(path: string[]): TLPage {
         if (path.length == 0) {
             return this;
-        }
-        else {
+        } else {
             var index = Number(path[0]);
             if (index >= 0 && index < this.SubPages.Count) {
                 return this.SubPages.Collection[index].getPageByPath(path.slice(1));
             }
         }
         return null;
-    };
-    TLPage.prototype.getPageByPathString = function (path) {
+    }
+
+    public getPageByPathString(path: string): TLPage {
         return this.getPageByPath(path.split("/").slice(1));
-    };
+    }
+
     // 現在ロードされているすべてのページにパスを設定する
-    TLPage.prototype.setPath = function (path) {
+    public setPath(path: string): void {
         this.pagePath = path;
         if (this.loaded) {
-            for (var i = 0; i < this.SubPages.Count; i++) {
-                var subpage = this.SubPages.Collection[i];
+            for (var i: number = 0; i < this.SubPages.Count; i++) {
+                var subpage: TLPage = this.SubPages.Collection[i];
                 subpage.setPath(path + "/" + String(i));
             }
         }
-    };
-    TLPage.prototype.loadPageFile = function () {
+    }
+
+    private loadPageFile() {
         if (!this.loaded) {
             if (this.filename != "") {
                 this.Load(this.filename);
-            }
-            else {
+            } else {
                 // ページごとのロード
                 this.root.setPath("0");
                 this.Load("tlcom.command?name=getpage&path=" + this.pagePath);
@@ -609,35 +632,37 @@ var TLPage = (function () {
             this.loaded = true;
             this.filename = "";
         }
-    };
-    TLPage.prototype.get_ext = function (file) {
+    }
+
+    private get_ext(file: string) {
         var index = file.lastIndexOf(".");
         if (index >= 0) {
             return file.substring(index + 1);
         }
         return "";
-    };
-    TLPage.prototype.Load = function (path) {
+    }
+
+    public Load(path: string): void {
         //<browser/begin> ブラウザ用開始
         // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
-        if (this.get_ext(path) == "xml") {
-            this.LoadXML(path);
-        }
-        else {
-            this.LoadJSON(path);
-        }
+        //if (this.get_ext(path) == "xml") {
+        //    this.LoadXML(path);
+        //} else {
+        //    this.LoadJSON(path);
+        //}
         //<browser/end> ブラウザ用終了
-        //<server>// サーバー側 Node.js で使う
-        //<server>var this_ = this;
-        //<server>fs.readFile("./" + path, "UTF-8", function (err, data) {
-        //<server>    if (err) {
-        //<server>        console.log("readFile error");
-        //<server>        throw err;
-        //<server>    }
-        //<server>    var obj = JSON.parse(data);
-        //<server>    this_.FromJSON(obj);
-        //<server>});
-    };
+        // サーバー側 Node.js で使う
+        var this_ = this;
+        fs.readFile("./" + path, "UTF-8", function (err, data) {
+            if (err) {
+                console.log("readFile error");
+                throw err;
+            }
+            var obj = JSON.parse(data);
+            this_.FromJSON(obj);
+        });
+    }
+
     // サーバー用
     //TLPage.prototype.Load = function (path) {
     //    // サーバー側 Node.js で使う
@@ -651,33 +676,37 @@ var TLPage = (function () {
     //        this_.FromJSON(obj);
     //    });
     //};
-    TLPage.prototype.LoadXML = function (path) {
+
+    public LoadXML(path: string): void {
         // ブラウザ側で使う
         var request = new XMLHttpRequest();
         request.open("GET", path, false);
         request.send(null);
-        var doc = request.responseXML;
+        var doc: Document = request.responseXML;
         this.FromXml(doc.documentElement);
-    };
-    TLPage.prototype.LoadJSON = function (path) {
+    }
+
+    public LoadJSON(path: string): void {
         // ブラウザ側で使う
         var request = new XMLHttpRequest();
         request.open("GET", path, false);
         request.send(null);
         this.FromJSON(JSON.parse(request.responseText));
-    };
-    TLPage.prototype.Save = function (path) {
+    }
+
+    public Save(path: string): void {
         // ブラウザ側では処理できないので処理はなし //<browser> ブラウザ用
-        //<server>// サーバー側 Node.js で使う
-        //<server>var obj = this.ToJSON();
-        //<server>var data = JSON.stringify(obj);
-        //<server>fs.writeFile("./" + path, data, "UTF-8", function (err) {
-        //<server>    if (err) {
-        //<server>        console.log("writeFile error");
-        //<server>        throw err;
-        //<server>    }
-        //<server>});
-    };
+        // サーバー側 Node.js で使う
+        var obj = this.ToJSON();
+        var data = JSON.stringify(obj);
+        fs.writeFile("./" + path, data, "UTF-8", function (err) {
+            if (err) {
+                console.log("writeFile error");
+                throw err;
+            }
+        });
+    }
+
     // サーバー用
     //TLPage.prototype.Save = function (path) {
     //    // サーバー側 Node.js で使う
@@ -690,10 +719,12 @@ var TLPage = (function () {
     //        }
     //    });
     //};
+
     //private string totOpmlText(string text)
     //{
     //    return Regex.Replace(text, "\r\n", "\n");
     //}
+
     //public XmlElement ToOpml(XmlDocument doc, string name)
     //{
     //    XmlElement page = doc.CreateElement(name);
@@ -705,10 +736,12 @@ var TLPage = (function () {
     //    }
     //    return page;
     //}
+
     //public XmlElement ToOpml(XmlDocument doc)
     //{
     //    return ToOpml(doc, "outline");
     //}
+
     //private string fromOpmlText(string title, string text)
     //{
     //    string s = Regex.Replace(text, "\n", "\r\n");
@@ -719,6 +752,7 @@ var TLPage = (function () {
     //        return title + "\r\n" + s;
     //    }
     //}
+
     //public void FromOpml(XmlElement element)
     //{
     //    string title = element.GetAttribute("text");
@@ -734,6 +768,7 @@ var TLPage = (function () {
     //        }
     //    }
     //}
+
     ///// <summary>
     ///// Carbonfin Outliner形式のOPMLを読み込む
     ///// </summary>
@@ -746,6 +781,7 @@ var TLPage = (function () {
     //        FromOpml(find_element(doc.DocumentElement, "body"));
     //    }
     //}
+
     ///// <summary>
     ///// Carbonfin Outliner形式のOPMLを保存
     ///// </summary>
@@ -763,6 +799,7 @@ var TLPage = (function () {
     //    root.AppendChild(body);
     //    doc.Save(path);
     //}
+
     ///// <summary>
     ///// WZ形式のテキストに変換
     ///// </summary>
@@ -781,17 +818,18 @@ var TLPage = (function () {
     //    }
     //    return text;
     //}
-    TLPage.prototype.StartsWith = function (str, header) {
+
+    protected StartsWith(str: string, header: string): boolean {
         return str.length >= header.length && str.substr(0, header.length) == header;
-    };
-    TLPage.prototype.splitSections = function (sections, header) {
-        var result = new Array();
-        var chapter = null;
-        for (var _i = 0; _i < sections.length; _i++) {
-            var section = sections[_i];
+    }
+
+    private splitSections(sections: string[], header: string): string[][] {
+        var result: Array<string[]> = new Array<string[]>();
+        var chapter: string[] = null;
+        for (var section of sections) {
             if (this.StartsWith(section, header)) {
                 if (chapter == null) {
-                    chapter = new Array();
+                    chapter = new Array<string>();
                 }
                 chapter.push(section.substring(1));
             }
@@ -799,7 +837,7 @@ var TLPage = (function () {
                 if (chapter != null) {
                     result.push(chapter);
                 }
-                chapter = new Array();
+                chapter = new Array<string>();
                 chapter.push(section);
             }
         }
@@ -807,20 +845,65 @@ var TLPage = (function () {
             result.push(chapter);
         }
         return result;
-    };
-    TLPage.prototype.FromText = function (sections, header) {
+    }
+
+    public FromText(sections: string[], header: string): void {
         if (sections.length > 0) {
             this.Text = sections[0];
             var sections2 = sections.slice(1);
-            for (var _i = 0, _a = this.splitSections(sections2, header); _i < _a.length; _i++) {
-                var chapter = _a[_i];
-                var page = new TLPage("", "", this.root, this.Settings);
+            for (var chapter of this.splitSections(sections2, header)) {
+                var page: TLPage = new TLPage("", "", this.root, this.Settings);
                 page.FromText(chapter, header);
                 this.SubPages.Add(page);
             }
         }
-    };
-    return TLPage;
-})();
-//<server>module.exports = TLPage; // サーバー用
-//# sourceMappingURL=TLPage.js.map
+    }
+
+    ///// <summary>
+    ///// MIFES形式のテキストに変換
+    ///// </summary>
+    ///// <param name="headers"></param>
+    ///// <returns></returns>
+    //public string ToText(IEnumerable < string > headers, IEnumerable < string > defaultHeaders)
+    //{
+    //    if (headers.Count() == 0) {
+    //        headers = defaultHeaders;
+    //    }
+    //    string text = headers.ElementAt(0) + Text;
+    //    if (!Regex.IsMatch(text, @"\r\n$") )
+    //    {
+    //        text += "\r\n";
+    //    }
+    //    foreach(TLPage page in SubPages)
+    //    {
+    //        text += page.ToText(headers.Skip(1), defaultHeaders);
+    //    }
+    //    return text;
+    //}
+
+    ///// <summary>
+    ///// MIFES形式のテキストを読み込む
+    ///// </summary>
+    ///// <param name="text"></param>
+    ///// <param name="headers"></param>
+    //public void FromText(string text, IEnumerable < string > headers)
+    //{
+    //    if (headers.Count() == 0) {
+    //        Text = text;
+    //    }
+    //    else {
+    //        string[] sections = text.Split(new string[] { "\r\n" + headers.ElementAt(0) }, StringSplitOptions.None);
+    //        if (sections.Count() > 0) {
+    //            Text = sections[0];
+    //            foreach(string section in sections.Skip(1))
+    //            {
+    //                TLPage page = new TLPage("", root);
+    //                page.FromText(section, headers.Skip(1));
+    //            }
+    //        }
+    //    }
+    //}
+}
+
+export = TLPage; // サーバー用
+

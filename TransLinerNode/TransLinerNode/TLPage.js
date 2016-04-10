@@ -26,7 +26,7 @@ var TLPageCollection = (function () {
         this.Collection = new Array();
     };
     return TLPageCollection;
-})();
+}());
 var TLPage = (function () {
     function TLPage(title, text, root, Settings) {
         this.Settings = Settings;
@@ -787,8 +787,8 @@ var TLPage = (function () {
     TLPage.prototype.splitSections = function (sections, header) {
         var result = new Array();
         var chapter = null;
-        for (var _i = 0; _i < sections.length; _i++) {
-            var section = sections[_i];
+        for (var _i = 0, sections_1 = sections; _i < sections_1.length; _i++) {
+            var section = sections_1[_i];
             if (this.StartsWith(section, header)) {
                 if (chapter == null) {
                     chapter = new Array();
@@ -821,6 +821,6 @@ var TLPage = (function () {
         }
     };
     return TLPage;
-})();
+}());
 //<server>module.exports = TLPage; // サーバー用
 //# sourceMappingURL=TLPage.js.map

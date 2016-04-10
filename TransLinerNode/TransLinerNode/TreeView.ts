@@ -1,35 +1,32 @@
-var TreeView = (function () {
-    function TreeView(canvas, rootPage, settings) {
-        this.openButtonWidth = 24;
-        this.openButtonWidthMargin = 26;
-        this.menuButtonWidth = 24;
-        this.menuButtonWidthMargin = 26;
-        this.menuButtonWidth2 = 48;
-        this.headlineWidth = 320;
-        this.lineHeight = 24;
-        this.radius = 12;
-        this.xButtonSize = 24;
-        this.yButtonSize = 26;
-        this.touchStart = function (x, y) {
-            for (var i = 0; i < this.menus.length; i++) {
-                if (this.menus[i].menuContains(x, y)) {
-                    this.menus[i].touchStart(x, y);
-                    return;
-                }
-            }
-            for (var i = 0; i < this.buttons.length; i++) {
-                this.buttons[i].touchStart(x, y);
-            }
-        };
+﻿class TreeView {
+    private canvas: HTMLCanvasElement;
+    private rootPage: TLRootPage;
+    private openButtonWidth = 24;
+    private openButtonWidthMargin = 26;
+    private menuButtonWidth = 24;
+    private menuButtonWidthMargin = 26;
+    private menuButtonWidth2 = 48;
+    private headlineWidth = 320;
+    private lineHeight = 24;
+    private settings: ViewSettings;
+    private radius = 12;
+    private buttons: Array<TVCheckBox>;
+    private menus: Array<TVMenu>;
+    private headlineButtons: Array<TVCheckTextBox>;
+    private xButtonSize = 24;
+    private yButtonSize = 26;
+
+    public constructor(canvas: HTMLCanvasElement, rootPage: TLRootPage, settings: ViewSettings) {
         this.canvas = canvas;
         this.rootPage = rootPage;
         this.settings = settings;
-        this.buttons = new Array();
-        this.menus = new Array();
-        this.headlineButtons = new Array();
+        this.buttons = new Array<TVCheckBox>();
+        this.menus = new Array<TVMenu>();
+        this.headlineButtons = new Array<TVCheckTextBox>();
         def_mouse_event(canvas, this);
     }
-    TreeView.prototype.redraw = function () {
+
+    public redraw(): void {
         for (var i = 0; i < this.buttons.length; i++) {
             this.buttons[i].draw();
         }
@@ -39,20 +36,22 @@ var TreeView = (function () {
                 this.menus[i].draw();
             }
         }
-    };
-    TreeView.prototype.clear = function () {
-        var gc = this.canvas.getContext("2d");
+    }
+
+    public clear() {
+        var gc: CanvasRenderingContext2D = this.canvas.getContext("2d");
         for (var i = 0; i < this.buttons.length; i++) {
             this.buttons[i].clear(gc, this.settings.BodyBackColor);
         }
         for (var i = 0; i < this.menus.length; i++) {
             this.menus[i].clear(gc, this.settings.BodyBackColor);
         }
-    };
-    TreeView.prototype.draw = function () {
-        this.buttons = new Array();
-        this.menus = new Array();
-        this.headlineButtons = new Array();
+    }
+
+    public draw(): void {
+        this.buttons = new Array<TVCheckBox>();
+        this.menus = new Array<TVMenu>();
+        this.headlineButtons = new Array<TVCheckTextBox>();
         this.createTree(this.rootPage, 0, 0);
         // キャンバスのサイズが小さすぎるときは大きくする
         if (this.canvas.height < this.createTreeHeight(this.rootPage) + this.yButtonSize * 2) {
@@ -62,34 +61,40 @@ var TreeView = (function () {
             this.canvas.width = this.getTreeWidth() + this.xButtonSize * 2;
         }
         this.redraw();
-    };
-    TreeView.prototype.renewAndDraw = function (command, page) {
+    }
+
+    public renewAndDraw(command: (TLRootPage) => void, page: TLPage): void {
         // TreeViewを作り直して再描画
         this.clear(); // いったん全部消去
         this.closeMenuAll(); // メニューを閉じる
         this.rootPage.SelectedPage = page;
         command(this.rootPage);
         this.draw();
-    };
-    TreeView.prototype.closeMenuAll = function () {
+    }
+
+    private closeMenuAll() {
         for (var i = 0; i < this.menus.length; i++) {
             this.menus[i].closeAll();
         }
-    };
-    TreeView.prototype.closeMenu = function () {
+    }
+
+    private closeMenu() {
         this.closeMenuGroup(this.menus);
-    };
-    TreeView.prototype.closeMenuGroup = function (menus) {
+    }
+
+    private closeMenuGroup(menus: TVMenu[]) {
         for (var i = 0; i < menus.length; i++) {
             menus[i].setValue(false);
         }
-    };
-    TreeView.prototype.closeHeadlines = function () {
+    }
+
+    private closeHeadlines() {
         for (var i = 0; i < this.headlineButtons.length; i++) {
             this.headlineButtons[i].setValue(false);
         }
-    };
-    TreeView.prototype.openMenuCount = function () {
+    }
+
+    private openMenuCount() {
         var count = 0;
         for (var i = 0; i < this.menus.length; i++) {
             if (this.menus[i].getValue()) {
@@ -97,36 +102,39 @@ var TreeView = (function () {
             }
         }
         return count;
-    };
-    TreeView.prototype.createTree = function (page, x, y) {
+    }
+
+    public createTree(page: TLPage, x: number, y: number): void {
         if (!page.CanExpand()) {
             page.IsExpanded = true;
         }
         this.createHeadline(x, y, page);
-        var height = this.yButtonSize;
+        var height: number = this.yButtonSize;
         if (page.IsExpanded && page.SubPages.Count > 0) {
-            for (var i = 0; i < page.SubPages.Count; i++) {
-                var subpage = page.SubPages.Collection[i];
+            for (var i: number = 0; i < page.SubPages.Count; i++) {
+                var subpage: TLPage = page.SubPages.Collection[i];
                 this.createTree(subpage, x + this.xButtonSize, y + height);
                 height += this.createTreeHeight(subpage);
             }
         }
-    };
-    TreeView.prototype.createTreeHeight = function (page) {
-        var height = this.yButtonSize;
+    }
+
+    public createTreeHeight(page: TLPage): number {
+        var height: number = this.yButtonSize;
         if (page.IsExpanded && page.SubPages.Count > 0) {
-            for (var i = 0; i < page.SubPages.Count; i++) {
-                var subpage = page.SubPages.Collection[i];
+            for (var i: number = 0; i < page.SubPages.Count; i++) {
+                var subpage: TLPage = page.SubPages.Collection[i];
                 height += this.createTreeHeight(subpage);
             }
         }
         return height;
-    };
-    TreeView.prototype.getTreeWidth = function () {
-        var left = 0;
-        var right = 0;
+    }
+
+    private getTreeWidth(): number {
+        var left: number = 0;
+        var right: number = 0;
         for (var i = 0; i < this.buttons.length; i++) {
-            var rect = this.buttons[i].getRect();
+            var rect: WYRect = this.buttons[i].getRect();
             if (left > rect.left) {
                 left = rect.left;
             }
@@ -135,18 +143,22 @@ var TreeView = (function () {
             }
         }
         return right - left;
-    };
-    TreeView.prototype.addButton = function (menu, page, i, j, itemwidth, text, command) {
+    }
+
+    private addButton(menu: TVMenu, page: TLPage, i: number, j: number, itemwidth: number, text: string, command: (TLRootPage) => void) {
         var button = new TVButton(this.canvas, this.settings, this.radius, page);
         button.setText(text);
+
         var treeview = this;
         button.OnClick = function () {
             // 削除
             treeview.renewAndDraw(command, page);
-        };
+        }
+
         menu.add(button, i, j, itemwidth);
-    };
-    TreeView.prototype.createHeadline = function (x, y, page) {
+    }
+
+    public createHeadline(x: number, y: number, page: TLPage): void {
         var openButton = new TVCheckBox(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         openButton.setRect(x, y, this.openButtonWidth, this.lineHeight);
         openButton.setText("＋");
@@ -155,23 +167,24 @@ var TreeView = (function () {
         var treeview = this;
         openButton.OnCheck = function () {
             if (openButton.getValue()) {
-                treeview.renewAndDraw(function (root) { return root.Expand(); }, page);
+                treeview.renewAndDraw((root: TLRootPage) => root.Expand(), page);
+            } else {
+                treeview.renewAndDraw((root: TLRootPage) => root.Unexpand(), page);
             }
-            else {
-                treeview.renewAndDraw(function (root) { return root.Unexpand(); }, page);
-            }
-        };
+        }
         this.buttons.push(openButton);
+
         if (!this.settings.NoEdit) {
             this.createEditMenu(x, y, page);
         }
-        var headlineX;
+
+        var headlineX: number;
         if (this.settings.NoEdit) {
             headlineX = x + this.openButtonWidthMargin;
-        }
-        else {
+        } else {
             headlineX = x + this.openButtonWidthMargin + this.menuButtonWidthMargin;
         }
+
         var headlineButton = new TVCheckTextBox(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         headlineButton.setRect(headlineX, y, this.headlineWidth, this.lineHeight);
         this.buttons.push(headlineButton);
@@ -193,15 +206,17 @@ var TreeView = (function () {
                 treeview.redraw(); // TreeView全体を再描画
                 treeview.showSelectedText(this.getHeadlineText(), this.getContentText());
             }
-        };
-    };
-    TreeView.prototype.createEditMenu = function (x, y, page) {
+        }
+    }
+
+    private createEditMenu(x: number, y: number, page: TLPage) {
         var treeview = this;
         var menuButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuButton.setRect(x + this.openButtonWidthMargin, y, this.menuButtonWidth, this.lineHeight);
         menuButton.setText("▼");
         menuButton.setDownText("▲");
         this.buttons.push(menuButton);
+
         menuButton.OnCheck = function () {
             if (!this.getValue()) {
                 // メニューを閉じたとき
@@ -220,34 +235,39 @@ var TreeView = (function () {
                     this.setValue(true);
                 }
             }
-        };
+        }
         this.menus.push(menuButton);
+
         var p = 0;
         var menuMoveButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuMoveButton.setUpDownText("移動");
         menuButton.add(menuMoveButton, p++, 1, this.menuButtonWidth2);
-        this.addButton(menuMoveButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.MoveUp(); });
-        this.addButton(menuMoveButton, page, 0, 1, this.menuButtonWidth, "+", function (root) { return root.MoveDown(); });
-        this.addButton(menuMoveButton, page, 1, -1, this.menuButtonWidth, "+", function (root) { return root.MoveUpRightBottom(); });
-        this.addButton(menuMoveButton, page, 1, 1, this.menuButtonWidth, "+", function (root) { return root.MoveDownRightTop(); });
-        this.addButton(menuMoveButton, page, -1, -1, this.menuButtonWidth, "+", function (root) { return root.MoveLeftUp(); });
-        this.addButton(menuMoveButton, page, -1, 1, this.menuButtonWidth, "+", function (root) { return root.MoveLeftDown(); });
+        this.addButton(menuMoveButton, page, 0, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.MoveUp());
+        this.addButton(menuMoveButton, page, 0, 1, this.menuButtonWidth, "+", (root: TLRootPage) => root.MoveDown());
+        this.addButton(menuMoveButton, page, 1, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.MoveUpRightBottom());
+        this.addButton(menuMoveButton, page, 1, 1, this.menuButtonWidth, "+", (root: TLRootPage) => root.MoveDownRightTop());
+        this.addButton(menuMoveButton, page, -1, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.MoveLeftUp());
+        this.addButton(menuMoveButton, page, -1, 1, this.menuButtonWidth, "+", (root: TLRootPage) => root.MoveLeftDown());
+
         var menuCreateButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuCreateButton.setUpDownText("作成");
         menuButton.add(menuCreateButton, p++, 1, this.menuButtonWidth2);
-        this.addButton(menuCreateButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.CreateUp(); });
-        this.addButton(menuCreateButton, page, 0, 1, this.menuButtonWidth, "+", function (root) { return root.CreateDown(); });
-        this.addButton(menuCreateButton, page, 1, -1, this.menuButtonWidth, "+", function (root) { return root.CreateRightTop(); });
-        this.addButton(menuCreateButton, page, 1, 1, this.menuButtonWidth, "+", function (root) { return root.CreateRightBottom(); });
+        this.addButton(menuCreateButton, page, 0, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.CreateUp());
+        this.addButton(menuCreateButton, page, 0, 1, this.menuButtonWidth, "+", (root: TLRootPage) => root.CreateDown());
+        this.addButton(menuCreateButton, page, 1, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.CreateRightTop());
+        this.addButton(menuCreateButton, page, 1, 1, this.menuButtonWidth, "+", (root: TLRootPage) => root.CreateRightBottom());
+
         var menuDuplicateButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuDuplicateButton.setUpDownText("複製");
         menuButton.add(menuDuplicateButton, p++, 1, this.menuButtonWidth2);
-        this.addButton(menuDuplicateButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.DuplicateUp(); });
-        this.addButton(menuDuplicateButton, page, 0, -1, this.menuButtonWidth, "+", function (root) { return root.DuplicateDown(); });
+        this.addButton(menuDuplicateButton, page, 0, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.DuplicateUp());
+        this.addButton(menuDuplicateButton, page, 0, -1, this.menuButtonWidth, "+", (root: TLRootPage) => root.DuplicateDown());
+
         var menuDeleteButton = new TVMenu(this.canvas, this.settings, this.radius, page, this.rootPage.Settings.NoTitle);
         menuDeleteButton.setUpDownText("削除");
         menuButton.add(menuDeleteButton, p++, 1, this.menuButtonWidth2);
-        this.addButton(menuDeleteButton, page, 0, 1, this.menuButtonWidth2, "OK", function (root) { return root.DeleteSelectedItem(); });
+        this.addButton(menuDeleteButton, page, 0, 1, this.menuButtonWidth2, "OK", (root: TLRootPage) => root.DeleteSelectedItem());
+
         var menuCheckFunc = function () {
             if (!this.getValue()) {
                 // メニューを閉じたとき
@@ -262,14 +282,15 @@ var TreeView = (function () {
                 // このメニューを開く
                 this.setValue(true);
             }
-        };
+        }
         menuMoveButton.OnCheck = menuCheckFunc;
         menuCreateButton.OnCheck = menuCheckFunc;
         menuDuplicateButton.OnCheck = menuCheckFunc;
         menuDeleteButton.OnCheck = menuCheckFunc;
-    };
+    }
+
     // メニューが開いているときはまずメニューをチェックして、メニューがクリックされたときは他のボタンはチェックしない
-    TreeView.prototype.mousePressed = function (x, y) {
+    public mousePressed(x: number, y: number): void {
         for (var i = 0; i < this.menus.length; i++) {
             if (this.menus[i].menuContains(x, y)) {
                 this.menus[i].mousePressed(x, y);
@@ -279,8 +300,9 @@ var TreeView = (function () {
         for (var i = 0; i < this.buttons.length; i++) {
             this.buttons[i].mousePressed(x, y);
         }
-    };
-    TreeView.prototype.mouseReleased = function (x, y) {
+    }
+
+    public mouseReleased(x: number, y: number): void {
         for (var i = 0; i < this.menus.length; i++) {
             if (this.menus[i].menuContains(x, y)) {
                 this.menus[i].mouseReleased(x, y);
@@ -290,20 +312,40 @@ var TreeView = (function () {
         for (var i = 0; i < this.buttons.length; i++) {
             this.buttons[i].mouseReleased(x, y);
         }
-    };
-    TreeView.prototype.mouseMoved = function (x, y) {
-    };
-    TreeView.prototype.touchEnd = function (ids) {
+    }
+
+    public mouseMoved(x: number, y: number): void {
+    }
+
+    public touchStart = function (x: number, y: number): void {
+        for (var i = 0; i < this.menus.length; i++) {
+            if (this.menus[i].menuContains(x, y)) {
+                this.menus[i].touchStart(x, y);
+                return;
+            }
+        }
+        for (var i = 0; i < this.buttons.length; i++) {
+            this.buttons[i].touchStart(x, y);
+        }
+    }
+
+    public touchEnd(ids): void {
         for (var i = 0; i < this.menus.length; i++) {
             this.menus[i].touchEnd(ids);
+            // ここで位置をチェックすべきだが情報がないのでチェックしない
         }
         for (var i = 0; i < this.buttons.length; i++) {
             this.buttons[i].touchEnd(ids);
         }
-    };
-    TreeView.prototype.touchMove = function (x, y) {
-    };
-    TreeView.prototype.showSelectedText = function (headlineText, contentText) {
+    }
+
+    public touchMove(x: number, y: number): void {
+    }
+
+    private headlineElement: HTMLInputElement;
+    private contentElement: HTMLTextAreaElement;
+
+    private showSelectedText(headlineText: string, contentText: string) {
         if (this.headlineElement != null) {
             this.headlineElement.value = headlineText;
             this.headlineElement.focus();
@@ -314,8 +356,9 @@ var TreeView = (function () {
                 this.contentElement.focus();
             }
         }
-    };
-    TreeView.prototype.setSelectedTitle = function (title) {
+    }
+
+    public setSelectedTitle(title: string) {
         if (!this.settings.NoEdit) {
             for (var i = 0; i < this.headlineButtons.length; i++) {
                 if (this.headlineButtons[i].getValue()) {
@@ -325,8 +368,9 @@ var TreeView = (function () {
                 }
             }
         }
-    };
-    TreeView.prototype.setSelectedText = function (text) {
+    }
+
+    public setSelectedText(text: string) {
         if (!this.settings.NoEdit) {
             for (var i = 0; i < this.headlineButtons.length; i++) {
                 if (this.headlineButtons[i].getValue()) {
@@ -335,42 +379,36 @@ var TreeView = (function () {
                 }
             }
         }
-    };
-    Object.defineProperty(TreeView.prototype, "HeadlineElement", {
-        set: function (headlineElement) {
-            this.headlineElement = headlineElement;
-            var treeview = this;
-            headlineElement.onkeydown = function () { treeview.setSelectedTitle(headlineElement.value); };
-            headlineElement.onkeyup = function () { treeview.setSelectedTitle(headlineElement.value); };
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TreeView.prototype, "ContentElement", {
-        set: function (contentElement) {
-            this.contentElement = contentElement;
-            var treeview = this;
-            contentElement.onkeydown = function () { treeview.setSelectedText(contentElement.value); };
-            contentElement.onkeyup = function () { treeview.setSelectedText(contentElement.value); };
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TreeView.prototype, "InputFileElement", {
-        set: function (inputFileElement) {
-            this.inputFileElement = inputFileElement;
-            var treeview = this;
-            inputFileElement.addEventListener("change", function () {
-                treeview.rootPage.Settings.SetNoServerMode(); // サーバーを使わないモードに設定する
-                var file = inputFileElement.files[0];
-                treeview.load(file);
-                //treeview.loadX(file);
-            }, true);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TreeView.prototype.load = function (file) {
+    }
+
+    public set HeadlineElement(headlineElement: HTMLInputElement) {
+        this.headlineElement = headlineElement;
+        var treeview = this;
+        headlineElement.onkeydown = function () { treeview.setSelectedTitle(headlineElement.value) }
+        headlineElement.onkeyup = function () { treeview.setSelectedTitle(headlineElement.value) }
+    }
+
+    public set ContentElement(contentElement: HTMLTextAreaElement) {
+        this.contentElement = contentElement;
+        var treeview = this;
+        contentElement.onkeydown = function () { treeview.setSelectedText(contentElement.value) }
+        contentElement.onkeyup = function () { treeview.setSelectedText(contentElement.value) }
+    }
+
+    private inputFileElement: HTMLInputElement;
+
+    public set InputFileElement(inputFileElement: HTMLInputElement) {
+        this.inputFileElement = inputFileElement;
+        var treeview = this;
+        inputFileElement.addEventListener("change", function () {
+            treeview.rootPage.Settings.SetNoServerMode(); // サーバーを使わないモードに設定する
+            var file = inputFileElement.files[0];
+            treeview.load(file);
+            //treeview.loadX(file);
+        }, true);
+    }
+
+    public load(file: File) {
         // FileReaderを使った読み込み
         var treeview = this;
         var reader = new FileReader();
@@ -378,17 +416,17 @@ var TreeView = (function () {
             treeview.clear();
             if (file.type == "application/xml" || file.type == "text/xml") {
                 var parser = new DOMParser();
-                var doc = parser.parseFromString(reader.result, "text/xml");
+                var doc: Document = parser.parseFromString(reader.result, "text/xml");
                 treeview.rootPage.loadXML(doc.documentElement);
-            }
-            else {
+            } else {
                 treeview.rootPage.loadText(reader.result, file.name);
             }
             treeview.draw();
-        };
+        }
         reader.readAsText(file);
-    };
-    TreeView.prototype.loadX = function (file) {
+    }
+
+    public loadX(file: File) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         var request = new XMLHttpRequest();
         request.open("GET", file.name, false);
@@ -396,62 +434,64 @@ var TreeView = (function () {
         this.clear();
         if (file.type == "application/xml" || file.type == "text/xml") {
             this.rootPage.loadXML(request.responseXML.documentElement);
-        }
-        else {
+        } else {
             this.rootPage.loadText(request.responseText, file.name);
         }
         this.draw();
-    };
-    TreeView.prototype.loadXML = function (filename) {
+    }
+
+    public loadXML(filename: string) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
-        this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
+        this.settings.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
         this.rootPage.LoadXML(filename);
         this.draw();
-    };
-    TreeView.prototype.loadXMLbyFile = function (filename) {
+    }
+
+    public loadXMLbyFile(filename: string) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
-        this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
+        this.settings.NoEdit = true;  // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
         this.rootPage.LoadXML(filename);
         this.draw();
-    };
-    TreeView.prototype.loadJSON = function (filename) {
+    }
+
+    public loadJSON(filename: string) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
-        this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
+        this.settings.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
         this.rootPage.LoadJSON(filename);
         this.draw();
-    };
-    TreeView.prototype.loadJSONbyFile = function (filename) {
+    }
+
+    public loadJSONbyFile(filename: string) {
         // XMLHttpRequestを使った読み込み：この関数を使うときファイルはindex.htmlと同じディレクトリにある必要がある
         this.rootPage.Settings.NoTitle = false; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
-        this.settings.NoEdit = true; // 編集可能かどうか(trueのとき編集不可)
+        this.settings.NoEdit = true;  // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
         this.rootPage.LoadJSON(filename);
         this.draw();
-    };
-    TreeView.prototype.JSONtest = function () {
+    }
+
+    public JSONtest() {
         //this.contentElement.value = JSON.stringify(this.rootPage.ToJSON());
         this.rootPage.Settings.NoTitle = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
-        this.settings.NoEdit = false; // 編集可能かどうか(trueのとき編集不可)
+        this.settings.NoEdit = false;  // 編集可能かどうか(trueのとき編集不可)
         this.rootPage.IsExpanded = false;
         this.rootPage.SubPages.Clear();
         this.clear();
         this.rootPage.LoadJSON("tlcom.command?name=getpage&path=/");
         this.draw();
-    };
-    return TreeView;
-})();
-//# sourceMappingURL=TreeView.js.map
+    }
+}

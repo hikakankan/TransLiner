@@ -1,4 +1,5 @@
-//<server>var fs = require("fs"); // サーバー用
+"use strict";
+var fs = require("fs"); // サーバー用
 var TLPageCollection = (function () {
     function TLPageCollection() {
         this.Collection = new Array();
@@ -26,7 +27,7 @@ var TLPageCollection = (function () {
         this.Collection = new Array();
     };
     return TLPageCollection;
-})();
+}());
 var TLPage = (function () {
     function TLPage(title, text, root, Settings) {
         this.Settings = Settings;
@@ -620,23 +621,22 @@ var TLPage = (function () {
     TLPage.prototype.Load = function (path) {
         //<browser/begin> ブラウザ用開始
         // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
-        if (this.get_ext(path) == "xml") {
-            this.LoadXML(path);
-        }
-        else {
-            this.LoadJSON(path);
-        }
+        //if (this.get_ext(path) == "xml") {
+        //    this.LoadXML(path);
+        //} else {
+        //    this.LoadJSON(path);
+        //}
         //<browser/end> ブラウザ用終了
-        //<server>// サーバー側 Node.js で使う
-        //<server>var this_ = this;
-        //<server>fs.readFile("./" + path, "UTF-8", function (err, data) {
-        //<server>    if (err) {
-        //<server>        console.log("readFile error");
-        //<server>        throw err;
-        //<server>    }
-        //<server>    var obj = JSON.parse(data);
-        //<server>    this_.FromJSON(obj);
-        //<server>});
+        // サーバー側 Node.js で使う
+        var this_ = this;
+        fs.readFile("./" + path, "UTF-8", function (err, data) {
+            if (err) {
+                console.log("readFile error");
+                throw err;
+            }
+            var obj = JSON.parse(data);
+            this_.FromJSON(obj);
+        });
     };
     // サーバー用
     //TLPage.prototype.Load = function (path) {
@@ -668,15 +668,15 @@ var TLPage = (function () {
     };
     TLPage.prototype.Save = function (path) {
         // ブラウザ側では処理できないので処理はなし //<browser> ブラウザ用
-        //<server>// サーバー側 Node.js で使う
-        //<server>var obj = this.ToJSON();
-        //<server>var data = JSON.stringify(obj);
-        //<server>fs.writeFile("./" + path, data, "UTF-8", function (err) {
-        //<server>    if (err) {
-        //<server>        console.log("writeFile error");
-        //<server>        throw err;
-        //<server>    }
-        //<server>});
+        // サーバー側 Node.js で使う
+        var obj = this.ToJSON();
+        var data = JSON.stringify(obj);
+        fs.writeFile("./" + path, data, "UTF-8", function (err) {
+            if (err) {
+                console.log("writeFile error");
+                throw err;
+            }
+        });
     };
     // サーバー用
     //TLPage.prototype.Save = function (path) {
@@ -787,8 +787,8 @@ var TLPage = (function () {
     TLPage.prototype.splitSections = function (sections, header) {
         var result = new Array();
         var chapter = null;
-        for (var _i = 0; _i < sections.length; _i++) {
-            var section = sections[_i];
+        for (var _i = 0, sections_1 = sections; _i < sections_1.length; _i++) {
+            var section = sections_1[_i];
             if (this.StartsWith(section, header)) {
                 if (chapter == null) {
                     chapter = new Array();
@@ -821,6 +821,6 @@ var TLPage = (function () {
         }
     };
     return TLPage;
-})();
-//<server>module.exports = TLPage; // サーバー用
-//# sourceMappingURL=TLPage.js.map
+}());
+module.exports = TLPage;
+//# sourceMappingURL=TLPageServer.js.map

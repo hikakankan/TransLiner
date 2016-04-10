@@ -1,0 +1,14 @@
+{
+  "Title": "JSON WZサンプル第1部_第11章_セクション",
+  "Text": "WZサンプル第1部_第11章_セクション",
+  "SubPages": [
+    {
+      "Title": "第1部",
+      "File": "sample1.json"
+    },
+    {
+      "Title": "第2部",
+      "File": "sample2.json"
+    }
+  ]
+}

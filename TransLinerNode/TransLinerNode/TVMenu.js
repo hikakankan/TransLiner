@@ -47,14 +47,14 @@ var TVCheckBox = (function (_super) {
         configurable: true
     });
     return TVCheckBox;
-})(WYCheckBox);
+}(WYCheckBox));
 var TVCheckTextBox = (function (_super) {
     __extends(TVCheckTextBox, _super);
     function TVCheckTextBox(element, settings, cornerRadius, page, NoTitle) {
         _super.call(this, element, settings, cornerRadius, page, NoTitle);
     }
     return TVCheckTextBox;
-})(TVCheckBox);
+}(TVCheckBox));
 var TVButton = (function (_super) {
     __extends(TVButton, _super);
     function TVButton(element, settings, cornerRadius, page) {
@@ -81,7 +81,7 @@ var TVButton = (function (_super) {
         // ボタンのときは何もしない
     };
     return TVButton;
-})(WYRoundButton);
+}(WYRoundButton));
 var TVMenu = (function (_super) {
     __extends(TVMenu, _super);
     function TVMenu(element, settings, cornerRadius, page, NoTitle) {
@@ -197,5 +197,5 @@ var TVMenu = (function (_super) {
         return false;
     };
     return TVMenu;
-})(TVCheckBox);
+}(TVCheckBox));
 //# sourceMappingURL=TVMenu.js.map

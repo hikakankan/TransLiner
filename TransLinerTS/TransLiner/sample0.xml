@@ -1,0 +1,14 @@
+<page>
+  <title>WZサンプル第1部_第11章_セクション</title>
+  <text>WZサンプル第1部_第11章_セクション</text>
+  <subpages>
+    <page>
+      <title>第1部</title>
+      <file>sample1.xml</file>
+    </page>
+    <page>
+      <title>第2部</title>
+      <file>sample2.xml</file>
+    </page>
+  </subpages>
+</page>

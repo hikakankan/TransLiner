@@ -96,5 +96,5 @@ var WYCheckBox = (function () {
     WYCheckBox.prototype.touchMove = function (x, y) {
     };
     return WYCheckBox;
-})();
+}());
 //# sourceMappingURL=WYCheckBox.js.map

@@ -1,32 +1,41 @@
-function def_mouse_event(element, obj) {
+﻿interface TouchEventSource {
+    mousePressed(x: number, y: number): void;
+    mouseReleased(x: number, y: number): void;
+    mouseMoved(x: number, y: number): void;
+    touchStart(x: number, y: number): void;
+    touchEnd(ids: number[]): void;
+    touchMove(x: number, y: number): void;
+}
+
+function def_mouse_event(element: HTMLElement, obj: TouchEventSource): void {
     element.onmousedown = function (e) {
-        var rect = e.target.getBoundingClientRect();
+        var rect = (<HTMLElement>e.target).getBoundingClientRect();
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
         obj.mousePressed(x, y);
-    };
+    }
     element.onmouseup = function (e) {
-        var rect = e.target.getBoundingClientRect();
+        var rect = (<HTMLElement>e.target).getBoundingClientRect();
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
         obj.mouseReleased(x, y);
-    };
+    }
     element.onmousemove = function (e) {
-        var rect = e.target.getBoundingClientRect();
+        var rect = (<HTMLElement>e.target).getBoundingClientRect();
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
         obj.mouseMoved(x, y);
-    };
+    }
     if (typeof element.ontouchstart !== "undefined") {
         element.ontouchstart = function (event) {
             for (var i = 0; i < event.touches.length; i++) {
                 var e = event.touches[i];
-                var rect = e.target.getBoundingClientRect();
+                var rect = (<HTMLElement>e.target).getBoundingClientRect();
                 var x = e.clientX - rect.left;
                 var y = e.clientY - rect.top;
                 obj.touchStart(x, y);
             }
-        };
+        }
         element.ontouchend = function (event) {
             var ids = new Array();
             for (var i = 0; i < event.touches.length; i++) {
@@ -34,19 +43,19 @@ function def_mouse_event(element, obj) {
                 ids.push(e.identifier);
             }
             obj.touchEnd(ids);
-        };
+        }
         element.ontouchmove = function (event) {
             for (var i = 0; i < event.touches.length; i++) {
                 var e = event.touches[i];
-                var rect = e.target.getBoundingClientRect();
+                var rect = (<HTMLElement>e.target).getBoundingClientRect();
                 var x = e.clientX - rect.left;
                 var y = e.clientY - rect.top;
                 obj.touchMove(x, y);
             }
-        };
+        }
     }
 }
-function def_mouse_event_in_obj(obj) {
+
+function def_mouse_event_in_obj(obj): void {
     def_mouse_event(obj.canvas, obj);
 }
-//# sourceMappingURL=defevent.js.map

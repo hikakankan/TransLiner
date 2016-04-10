@@ -453,5 +453,5 @@ var TreeView = (function () {
         this.draw();
     };
     return TreeView;
-})();
+}());
 //# sourceMappingURL=TreeView.js.map

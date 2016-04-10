@@ -1,0 +1,10 @@
+{
+  "name": "trans-liner-node",
+  "version": "0.0.0",
+  "description": "TransLinerNode",
+  "main": "app.js",
+  "author": {
+    "name": "furut",
+    "email": ""
+  }
+}

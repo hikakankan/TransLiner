@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>TransLiner</title>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+    <script src="WYGraphics.js"></script>
+    <script src="WYButton.js"></script>
+    <script src="WYCheckBox.js"></script>
+    <script src="WYTextBox.js"></script>
+    <script src="TLPage.js"></script>
+    <script src="TLRootPage.js"></script>
+    <script src="TLPageSettings.js"></script>
+    <script src="ViewSettings.js"></script>
+    <script src="TVMenu.js"></script>
+    <script src="TreeView.js"></script>
+    <script src="defevent.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <h1>TransLiner</h1>
+    <div id="content">
+        <canvas id="treeview" width="24" height="24"></canvas>
+    </div>
+    <div><input type="text" id="headlineTextBox" maxlength="20" /></div>
+    <div><textarea id="contentTextBox" rows="10" cols="20"></textarea></div>
+    <div>
+        <input id="file" name="file" type="file" accept="text/plain,application/xml" />
+    </div>
+    <div>
+        <input type="button" onclick="loadXML()" value="サーバーから読み込みテスト" />
+    </div>
+    <div>
+        <input type="button" onclick="loadXMLbyFile()" value="サーバーから読み込みテスト(ファイル分割)" />
+    </div>
+    <div>
+        <input type="button" onclick="loadJSON()" value="サーバーから読み込みテスト(JSON)" />
+    </div>
+    <div>
+        <input type="button" onclick="loadJSONbyFile()" value="サーバーから読み込みテスト(ファイル分割)(JSON)" />
+    </div>
+    <div>
+        <input type="button" onclick="JSONtest()" value="JSONテスト" />
+    </div>
+</body>
+</html>
