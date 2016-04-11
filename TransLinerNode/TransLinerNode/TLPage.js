@@ -1,4 +1,6 @@
-//<server>var fs = require("fs"); // サーバー用
+//<server>import fs = require("fs"); // サーバー用
+//<server>import TLRootPage = require("./TLRootPageServer"); // サーバー用
+//<server>import TLPageSettings = require("./TLPageSettingsServer"); // サーバー用
 var TLPageCollection = (function () {
     function TLPageCollection() {
         this.Collection = new Array();
@@ -631,7 +633,7 @@ var TLPage = (function () {
         //<server>var this_ = this;
         //<server>fs.readFile("./" + path, "UTF-8", function (err, data) {
         //<server>    if (err) {
-        //<server>        console.log("readFile error");
+        //<server>        console.log("readFile error: " + path);
         //<server>        throw err;
         //<server>    }
         //<server>    var obj = JSON.parse(data);
@@ -673,7 +675,7 @@ var TLPage = (function () {
         //<server>var data = JSON.stringify(obj);
         //<server>fs.writeFile("./" + path, data, "UTF-8", function (err) {
         //<server>    if (err) {
-        //<server>        console.log("writeFile error");
+        //<server>        console.log("writeFile error: " + path);
         //<server>        throw err;
         //<server>    }
         //<server>});
@@ -822,5 +824,5 @@ var TLPage = (function () {
     };
     return TLPage;
 }());
-//<server>module.exports = TLPage; // サーバー用
+//<server>export = TLPage; // サーバー用
 //# sourceMappingURL=TLPage.js.map

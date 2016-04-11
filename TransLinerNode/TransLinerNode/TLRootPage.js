@@ -1,4 +1,5 @@
-//<server>var TLPage = require("./TLPageServer.js"); // サーバー用
+//<server>import TLPage = require("./TLPageServer"); // サーバー用
+//<server>import TLPageSettings = require("./TLPageSettingsServer"); // サーバー用
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -39,7 +40,7 @@ var TLRootPage = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    //<server>var serverSide = true; // サーバー側で実行する
+    //<server>private serverSide = true; // サーバー側で実行する
     TLRootPage.prototype.execCommand = function (command, actual_proc) {
         if (this.Settings.NoServer || this.serverSide) {
             // サーバーを使わないか、サーバー側のときは実際に動作する処理を行う
@@ -314,5 +315,5 @@ var TLRootPage = (function (_super) {
     };
     return TLRootPage;
 }(TLPage));
-//<server>module.exports = TLRootPage; // サーバー用
+//<server>export = TLRootPage; // サーバー用
 //# sourceMappingURL=TLRootPage.js.map

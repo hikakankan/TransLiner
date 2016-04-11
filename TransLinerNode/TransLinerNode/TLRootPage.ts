@@ -1,4 +1,5 @@
-﻿//<server>var TLPage = require("./TLPageServer.js"); // サーバー用
+﻿//<server>import TLPage = require("./TLPageServer"); // サーバー用
+//<server>import TLPageSettings = require("./TLPageSettingsServer"); // サーバー用
 
 class TLRootPage extends TLPage {
     public constructor(title: string, text: string, settings: TLPageSettings) {
@@ -31,7 +32,7 @@ class TLRootPage extends TLPage {
     }
 
     private serverSide = false; // ブラウザ側で実行する //<browser> ブラウザ用
-    //<server>var serverSide = true; // サーバー側で実行する
+    //<server>private serverSide = true; // サーバー側で実行する
 
     private execCommand(command: string, actual_proc: () => boolean): boolean {
         if (this.Settings.NoServer || this.serverSide) {
@@ -48,7 +49,7 @@ class TLRootPage extends TLPage {
         }
     }
 
-    private receiveCommand(command: string): boolean {
+    public receiveCommand(command: string): boolean {
         // コマンドを受け取ったサーバー側の処理
         if (command == "MoveLeftUp") {
             return this.MoveLeftUp_();
@@ -738,5 +739,4 @@ class TLRootPage extends TLPage {
     //}
 }
 
-//<server>module.exports = TLRootPage; // サーバー用
-
+//<server>export = TLRootPage; // サーバー用

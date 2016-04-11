@@ -1,4 +1,4 @@
-﻿class TLPageSettings {
+class TLPageSettings {
     public NoTitle: boolean = true; // テキストとは別に見出しを設定するかどうか(trueのときテキストの先頭部分が見出しになる)
     public TitleLength: number = 20; // テキストの先頭部分が見出しになるときの見出しの長さ
 

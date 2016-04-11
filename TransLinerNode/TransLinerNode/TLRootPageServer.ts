@@ -1,5 +1,5 @@
-﻿import TLPage = require("./TLPageServer");
-import TLPageSettings = require("./TLPageSettingsServer");
+import TLPage = require("./TLPageServer"); // サーバー用
+import TLPageSettings = require("./TLPageSettingsServer"); // サーバー用
 
 class TLRootPage extends TLPage {
     public constructor(title: string, text: string, settings: TLPageSettings) {
@@ -31,7 +31,6 @@ class TLRootPage extends TLPage {
         }
     }
 
-    //private serverSide = false; // ブラウザ側で実行する //<browser> ブラウザ用
     private serverSide = true; // サーバー側で実行する
 
     private execCommand(command: string, actual_proc: () => boolean): boolean {
@@ -740,4 +739,3 @@ class TLRootPage extends TLPage {
 }
 
 export = TLRootPage; // サーバー用
-

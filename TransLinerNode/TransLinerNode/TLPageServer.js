@@ -619,19 +619,11 @@ var TLPage = (function () {
         return "";
     };
     TLPage.prototype.Load = function (path) {
-        //<browser/begin> ブラウザ用開始
-        // ファイルの拡張子によって LoadXML か LoadJSON のどちらかを実行する
-        //if (this.get_ext(path) == "xml") {
-        //    this.LoadXML(path);
-        //} else {
-        //    this.LoadJSON(path);
-        //}
-        //<browser/end> ブラウザ用終了
         // サーバー側 Node.js で使う
         var this_ = this;
         fs.readFile("./" + path, "UTF-8", function (err, data) {
             if (err) {
-                console.log("readFile error");
+                console.log("readFile error: " + path);
                 throw err;
             }
             var obj = JSON.parse(data);
@@ -667,13 +659,12 @@ var TLPage = (function () {
         this.FromJSON(JSON.parse(request.responseText));
     };
     TLPage.prototype.Save = function (path) {
-        // ブラウザ側では処理できないので処理はなし //<browser> ブラウザ用
         // サーバー側 Node.js で使う
         var obj = this.ToJSON();
         var data = JSON.stringify(obj);
         fs.writeFile("./" + path, data, "UTF-8", function (err) {
             if (err) {
-                console.log("writeFile error");
+                console.log("writeFile error: " + path);
                 throw err;
             }
         });

@@ -11,4 +11,4 @@
         this.NoServer = true; // サーバーを使うかどうか
     }
 }
-//<server>module.exports = TLPageSettings; // サーバー用
+//<server>export = TLPageSettings; // サーバー用

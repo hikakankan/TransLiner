@@ -4,12 +4,11 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var TLPage = require("./TLPageServer");
+var TLPage = require("./TLPageServer"); // サーバー用
 var TLRootPage = (function (_super) {
     __extends(TLRootPage, _super);
     function TLRootPage(title, text, settings) {
         _super.call(this, title, text, null, settings);
-        //private serverSide = false; // ブラウザ側で実行する //<browser> ブラウザ用
         this.serverSide = true; // サーバー側で実行する
         this.root = this;
     }

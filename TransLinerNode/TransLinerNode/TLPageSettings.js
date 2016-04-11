@@ -12,5 +12,5 @@ var TLPageSettings = (function () {
     };
     return TLPageSettings;
 }());
-//<server>module.exports = TLPageSettings; // サーバー用
+//<server>export = TLPageSettings; // サーバー用
 //# sourceMappingURL=TLPageSettings.js.map
