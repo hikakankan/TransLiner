@@ -95,7 +95,24 @@ var ParseObject = (function () {
     };
     ParseObject.prototype.concat = function (s1, op, s2) {
         if (s1 != "" && s2 != "") {
-            return s1 + op + s2;
+            if (op == " ") {
+                var c = "";
+                if (s1.length > 0) {
+                    c = s1[s1.length - 1];
+                }
+                if (s2 == ":" || s2 == ";" || s2 == "," || s2 == "." || s2 == "(" || s2 == "[" || s2 == "{" || s2 == "<" || s2 == ")" || s2 == "]" || s2 == "}" || s2 == ">" || s2 == "++" || s2 == "--") {
+                    return s1 + s2;
+                }
+                else if (c == "." || c == "(" || c == "[" || c == "{" || c == "<") {
+                    return s1 + s2;
+                }
+                else {
+                    return s1 + op + s2;
+                }
+            }
+            else {
+                return s1 + op + s2;
+            }
         }
         else {
             return s1 + s2;
@@ -237,7 +254,22 @@ var ParseObject = (function () {
             case ts.SyntaxKind.PropertySignature:
                 return this.format("$0 $1 ::PropertySignature:: $2 $3 $4 $5 : $6 = $7", this.children, n);
             case ts.SyntaxKind.PropertyAssignment:
-                return this.format("$0 $1 ::PropertyAssignment:: $2 $3 $4 $5 : $6 = $7", this.children, n);
+                if (this.children[6]) {
+                    if (this.children[7]) {
+                        return this.format("$0 $1 $2 $3 $4 $5 : $6 : $7", this.children, n);
+                    }
+                    else {
+                        return this.format("$0 $1 $2 $3 $4 $5 : $6", this.children, n);
+                    }
+                }
+                else {
+                    if (this.children[7]) {
+                        return this.format("$0 $1 $2 $3 $4 $5 : $7", this.children, n);
+                    }
+                    else {
+                        return this.format("$0 $1 $2 $3 $4 $5", this.children, n);
+                    }
+                }
             case ts.SyntaxKind.VariableDeclaration:
                 return this.format("$0 $1 var $2 $3 $4 $5 : $6 = $7", this.children, n);
             case ts.SyntaxKind.BindingElement:
@@ -332,7 +364,7 @@ var ParseObject = (function () {
                 return this.conc(this.children, n);
             case ts.SyntaxKind.ObjectLiteralExpression:
                 //return col([visitNodes(cbNodes, (<ts.ObjectLiteralExpression>node).properties)]);
-                return this.conc(this.children, n);
+                return this.format("{ ,0 }", this.children, n);
             case ts.SyntaxKind.PropertyAccessExpression:
                 //return col([visitNode(cbNode, (<ts.PropertyAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).dotToken),
