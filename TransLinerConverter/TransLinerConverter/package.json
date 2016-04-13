@@ -1,0 +1,10 @@
+{
+  "name": "trans-liner-converter",
+  "version": "0.0.0",
+  "description": "TransLinerConverter",
+  "main": "app.js",
+  "author": {
+    "name": "furut",
+    "email": ""
+  }
+}
