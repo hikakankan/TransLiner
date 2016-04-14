@@ -1,7 +1,7 @@
 ﻿import * as ts from "typescript";
 
 class ParseObject {
-    constructor(node: ts.Node, public children: ParseObject[], public list: ParseObject[], syntaxKind: ts.SyntaxKind) {
+    public constructor(node: ts.Node, public children: ParseObject[], public list: ParseObject[], syntaxKind: ts.SyntaxKind) {
         if (node != null) {
             this.kinde = node.kind;
             this.kind = ts.SyntaxKind[node.kind];
@@ -12,7 +12,23 @@ class ParseObject {
             this.kinde = syntaxKind;
             this.kind = ts.SyntaxKind[syntaxKind];
         }
+        var language = "perl";
+        if (language == "typescript") {
+            this.clike = false;
+            this.typed = true;
+            this.thisneed = true;
+            this.perl = false;
+        } else if (language == "perl") {
+            this.clike = true;
+            this.typed = false;
+            this.thisneed = false;
+            this.perl = true;
+        }
     }
+    private clike;
+    private typed;
+    private thisneed;
+    private perl;
     public kinde: ts.SyntaxKind = 0;
     public kind: string = "";
     public text: string = "";
@@ -128,7 +144,13 @@ class ParseObject {
             if (f[0] == "$") {
                 var x = Number(f.substr(1));
                 if (list[x]) {
-                    s = this.concat(s, " ", list[x].toTypeScript(" ", n));
+                    var arg = list[x].toTypeScript(" ", n);
+                    if (!this.thisneed && i == 1 && s == "this" && arg == ".") {
+                        // this は要らない。this. は消去
+                        s = "";
+                    } else {
+                        s = this.concat(s, " ", arg);
+                    }
                 }
                 linechanged = false;
             } else if (f[0] == ",") {
@@ -249,17 +271,25 @@ class ParseObject {
                     }
                 }
             case ts.SyntaxKind.VariableDeclaration:
-                if (this.children[6]) {
+                if (this.perl) {
                     if (this.children[7]) {
-                        return this.format("$0 $1 var $2 $3 $4 $5 : $6 = $7", this.children, n);
+                        return this.format("$0 $1 my $2 $3 $4 $5 = $7", this.children, n);
                     } else {
-                        return this.format("$0 $1 var $2 $3 $4 $5 : $6", this.children, n);
+                        return this.format("$0 $1 my $2 $3 $4 $5", this.children, n);
                     }
                 } else {
-                    if (this.children[7]) {
-                        return this.format("$0 $1 var $2 $3 $4 $5 = $7", this.children, n);
+                    if (this.children[6]) {
+                        if (this.children[7]) {
+                            return this.format("$0 $1 var $2 $3 $4 $5 : $6 = $7", this.children, n);
+                        } else {
+                            return this.format("$0 $1 var $2 $3 $4 $5 : $6", this.children, n);
+                        }
                     } else {
-                        return this.format("$0 $1 var $2 $3 $4 $5", this.children, n);
+                        if (this.children[7]) {
+                            return this.format("$0 $1 var $2 $3 $4 $5 = $7", this.children, n);
+                        } else {
+                            return this.format("$0 $1 var $2 $3 $4 $5", this.children, n);
+                        }
                     }
                 }
             case ts.SyntaxKind.BindingElement:
@@ -298,9 +328,9 @@ class ParseObject {
             case ts.SyntaxKind.SetAccessor:
                 return this.format("$0 $1 set $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
             case ts.SyntaxKind.FunctionExpression:
-                return this.format("$0 $1 ::FunctionExpression:: $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                return this.format("$0 $1 function $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
             case ts.SyntaxKind.FunctionDeclaration:
-                return this.format("$0 $1 ::FunctionDeclaration:: $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                return this.format("$0 $1 function $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
             case ts.SyntaxKind.ArrowFunction:
                 //return col([visitNodes(cbNodes, node.decorators),
                 //    visitNodes(cbNodes, node.modifiers),
@@ -358,13 +388,17 @@ class ParseObject {
                 //return col([visitNode(cbNode, (<ts.PropertyAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).dotToken),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).name)]);
-                return this.conc(this.children, n);
+                return this.format("$0 $1 $2", this.children, n);
             case ts.SyntaxKind.ElementAccessExpression:
                 //return col([visitNode(cbNode, (<ts.ElementAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.ElementAccessExpression>node).argumentExpression)]);
                 return this.format("$0 [ $1 ]", this.children, n);
             case ts.SyntaxKind.CallExpression:
-                return this.format("$0 $1 ( ,2 )", this.children, n);
+                if (this.perl) {
+                    return this.format("& $0 $1 ( ,2 )", this.children, n);
+                } else {
+                    return this.format("$0 $1 ( ,2 )", this.children, n);
+                }
             case ts.SyntaxKind.NewExpression:
                 //return col([visitNode(cbNode, (<ts.CallExpression>node).expression),
                 //    visitNodes(cbNodes, (<ts.CallExpression>node).typeArguments),
@@ -413,7 +447,7 @@ class ParseObject {
                 //return col([visitNode(cbNode, (<ts.BinaryExpression>node).left),
                 //    visitNode(cbNode, (<ts.BinaryExpression>node).operatorToken),
                 //    visitNode(cbNode, (<ts.BinaryExpression>node).right)]);
-                return this.conc(this.children, n);
+                return this.format("$0 $1 $2", this.children, n);
             case ts.SyntaxKind.AsExpression:
                 //return col([visitNode(cbNode, (<ts.AsExpression>node).expression),
                 //    visitNode(cbNode, (<ts.AsExpression>node).type)]);
@@ -863,7 +897,11 @@ class ParseObject {
                 return this.kind;
             case ts.SyntaxKind.Identifier:
                 if (this.text != "") {
-                    return this.text;
+                    if (this.perl) {
+                        return "$" + this.text;
+                    } else {
+                        return this.text;
+                    }
                 }
                 return this.kind;
             case ts.SyntaxKind.FirstKeyword:

@@ -49,6 +49,8 @@ import http = require('http');
 var port = process.env.port || 1337
 http.createServer(function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end(result + "\r\n");
+    res.write(result + "\r\n", "UTF-8");
+    res.end();
+    //res.end(result + "\r\n", "utf-8");
     //res.end(caselist + "\r\n");
 }).listen(port);
