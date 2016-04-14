@@ -92,9 +92,15 @@ class ParseObject {
                 if (s1.length > 0) {
                     c = s1[s1.length - 1];
                 }
-                if (s2 == ":" || s2 == ";" || s2 == "," || s2 == "." || s2 == "(" || s2 == "[" || s2 == "{" || s2 == "<" || s2 == ")" || s2 == "]" || s2 == "}" || s2 == ">" || s2 == "++" || s2 == "--") {
+                var t = "";
+                if (s2.length > 0) {
+                    t = s2[0];
+                }
+                if (t == "(" && (s1 == "if" || s1 == "switch" || s1 == "while" || s1 == "for" || s1 == "catch")) {
+                    return s1 + op + s2;
+                } else if (t == " " || t == ":" || t == ";" || t == "," || t == "." || t == "(" || t == "[" || t == "<" || t == ")" || t == "]" || t == "}" || t == ">" || s2 == "++" || s2 == "--") {
                     return s1 + s2;
-                } else if (c == "." || c == "(" || c == "[" || c == "{" || c == "<") {
+                } else if (c == " " || c == "." || c == "(" || c == "[" || c == "{" || c == "<" || s1 == "!" || s1 == "++" || s1 == "--") {
                     return s1 + s2;
                 } else {
                     return s1 + op + s2;
@@ -114,6 +120,11 @@ class ParseObject {
         var formatlist = formatstr.split(" ");
         for (var i = 0; i < formatlist.length; i++) {
             var f = formatlist[i]; 
+            if (f == "_(_") {
+                f = " ( ";
+            } else if (f == "_)_") {
+                f = " ) ";
+            }
             if (f[0] == "$") {
                 var x = Number(f.substr(1));
                 if (list[x]) {
@@ -238,7 +249,19 @@ class ParseObject {
                     }
                 }
             case ts.SyntaxKind.VariableDeclaration:
-                return this.format("$0 $1 var $2 $3 $4 $5 : $6 = $7", this.children, n);
+                if (this.children[6]) {
+                    if (this.children[7]) {
+                        return this.format("$0 $1 var $2 $3 $4 $5 : $6 = $7", this.children, n);
+                    } else {
+                        return this.format("$0 $1 var $2 $3 $4 $5 : $6", this.children, n);
+                    }
+                } else {
+                    if (this.children[7]) {
+                        return this.format("$0 $1 var $2 $3 $4 $5 = $7", this.children, n);
+                    } else {
+                        return this.format("$0 $1 var $2 $3 $4 $5", this.children, n);
+                    }
+                }
             case ts.SyntaxKind.BindingElement:
                 //return col([visitNodes(cbNodes, node.decorators),
                 //    visitNodes(cbNodes, node.modifiers),
@@ -431,34 +454,34 @@ class ParseObject {
                 //    visitNode(cbNode, (<ts.IfStatement>node).thenStatement),
                 //    visitNode(cbNode, (<ts.IfStatement>node).elseStatement)]);
                 if (this.children[2]) {
-                    return this.format("if ( $0 ) then $1 else $2", this.children, n);
+                    return this.format("if _(_ $0 _)_ then $1 else $2", this.children, n);
                 } else {
-                    return this.format("if ( $0 ) then $1", this.children, n);
+                    return this.format("if _(_ $0 _)_ then $1", this.children, n);
                 }
             case ts.SyntaxKind.DoStatement:
                 //return col([visitNode(cbNode, (<ts.DoStatement>node).statement),
                 //    visitNode(cbNode, (<ts.DoStatement>node).expression)]);
-                return this.format("do $0 while( $1 )", this.children, n);
+                return this.format("do $0 while _(_ $1 _)_", this.children, n);
             case ts.SyntaxKind.WhileStatement:
                 //return col([visitNode(cbNode, (<ts.WhileStatement>node).expression),
                 //    visitNode(cbNode, (<ts.WhileStatement>node).statement)]);
-                return this.format("while ( $0 ) $1", this.children, n);
+                return this.format("while _(_ $0 _)_ $1", this.children, n);
             case ts.SyntaxKind.ForStatement:
                 //return col([visitNode(cbNode, (<ts.ForStatement>node).initializer),
                 //    visitNode(cbNode, (<ts.ForStatement>node).condition),
                 //    visitNode(cbNode, (<ts.ForStatement>node).incrementor),
                 //    visitNode(cbNode, (<ts.ForStatement>node).statement)]);
-                return this.format("for ( $0 ; $1 ; $2 ) $3", this.children, n);
+                return this.format("for _(_ $0 ; $1 ; $2 _)_ $3", this.children, n);
             case ts.SyntaxKind.ForInStatement:
                 //return col([visitNode(cbNode, (<ts.ForInStatement>node).initializer),
                 //    visitNode(cbNode, (<ts.ForInStatement>node).expression),
                 //    visitNode(cbNode, (<ts.ForInStatement>node).statement)]);
-                return this.format("for ( $0 in $1 ) $2", this.children, n);
+                return this.format("for _(_ $0 in $1 _)_ $2", this.children, n);
             case ts.SyntaxKind.ForOfStatement:
                 //return col([visitNode(cbNode, (<ts.ForOfStatement>node).initializer),
                 //    visitNode(cbNode, (<ts.ForOfStatement>node).expression),
                 //    visitNode(cbNode, (<ts.ForOfStatement>node).statement)]);
-                return this.format("for ( $0 of $1 ) $2", this.children, n);
+                return this.format("for _(_ $0 of $1 _)_ $2", this.children, n);
             case ts.SyntaxKind.ContinueStatement:
                 return "continue";
             case ts.SyntaxKind.BreakStatement:
@@ -474,11 +497,11 @@ class ParseObject {
             case ts.SyntaxKind.WithStatement:
                 //return col([visitNode(cbNode, (<ts.WithStatement>node).expression),
                 //    visitNode(cbNode, (<ts.WithStatement>node).statement)]);
-                return this.format("with ( $0 ) $1", this.children, n);
+                return this.format("with _(_ $0 _)_ $1", this.children, n);
             case ts.SyntaxKind.SwitchStatement:
                 //return col([visitNode(cbNode, (<ts.SwitchStatement>node).expression),
                 //    visitNode(cbNode, (<ts.SwitchStatement>node).caseBlock)]);
-                return this.format("switch ( $0 ) $1", this.children, n);
+                return this.format("switch _(_ $0 _)_ $1", this.children, n);
             case ts.SyntaxKind.CaseBlock:
                 //return col([visitNodes(cbNodes, (<ts.CaseBlock>node).clauses)]);
                 return this.format("{ @0 }", this.children, n);
@@ -495,7 +518,7 @@ class ParseObject {
                 return this.format("$0 : $1", this.children, n);
             case ts.SyntaxKind.ThrowStatement:
                 //return col([visitNode(cbNode, (<ts.ThrowStatement>node).expression)]);
-                return this.format("throw ( $0 )", this.children, n);
+                return this.format("throw _(_ $0 _)_", this.children, n);
             case ts.SyntaxKind.TryStatement:
                 //return col([visitNode(cbNode, (<ts.TryStatement>node).tryBlock),
                 //    visitNode(cbNode, (<ts.TryStatement>node).catchClause),
@@ -504,7 +527,7 @@ class ParseObject {
             case ts.SyntaxKind.CatchClause:
                 //return col([visitNode(cbNode, (<ts.CatchClause>node).variableDeclaration),
                 //    visitNode(cbNode, (<ts.CatchClause>node).block)]);
-                return this.format("catch ( $0 ) $1", this.children, n);
+                return this.format("catch _(_ $0 _)_ $1", this.children, n);
             case ts.SyntaxKind.Decorator:
                 //return col([visitNode(cbNode, (<ts.Decorator>node).expression)]);
                 return this.conc(this.children, n);
@@ -751,11 +774,11 @@ class ParseObject {
             case ts.SyntaxKind.CommaToken:
                 return ",";
             case ts.SyntaxKind.FirstBinaryOperator:
-                return "<";
+                return " < ";
             case ts.SyntaxKind.LessThanSlashToken:
                 return "</";
             case ts.SyntaxKind.GreaterThanToken:
-                return ">";
+                return " > ";
             case ts.SyntaxKind.LessThanEqualsToken:
                 return "<=";
             case ts.SyntaxKind.GreaterThanEqualsToken:
