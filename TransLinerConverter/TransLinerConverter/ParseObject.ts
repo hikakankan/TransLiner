@@ -12,23 +12,27 @@ class ParseObject {
             this.kinde = syntaxKind;
             this.kind = ts.SyntaxKind[syntaxKind];
         }
+        //var language = "typescript";
         var language = "perl";
         if (language == "typescript") {
             this.clike = false;
             this.typed = true;
             this.thisneed = true;
             this.perl = false;
+            this.prop = true;
         } else if (language == "perl") {
             this.clike = true;
             this.typed = false;
             this.thisneed = false;
             this.perl = true;
+            this.prop = false;
         }
     }
     private clike;
     private typed;
     private thisneed;
     private perl;
+    private prop;
     public kinde: ts.SyntaxKind = 0;
     public kind: string = "";
     public text: string = "";
@@ -108,15 +112,19 @@ class ParseObject {
                 if (s1.length > 0) {
                     c = s1[s1.length - 1];
                 }
+                var c2 = "";
+                if (s1.length > 1) {
+                    c2 = s1.slice(s1.length - 2);
+                }
                 var t = "";
                 if (s2.length > 0) {
                     t = s2[0];
                 }
                 if (t == "(" && (s1 == "if" || s1 == "switch" || s1 == "while" || s1 == "for" || s1 == "catch")) {
                     return s1 + op + s2;
-                } else if (t == " " || t == ":" || t == ";" || t == "," || t == "." || t == "(" || t == "[" || t == "<" || t == ")" || t == "]" || t == "}" || t == ">" || s2 == "++" || s2 == "--") {
+                } else if (t == " " || t == ":" || t == ";" || t == "," || t == "." || t == "(" || t == "[" || s2 == "<" || t == ")" || t == "]" || t == "}" || s2 == ">" || s2 == "++" || s2 == "--" || s2 == "->" || s2 == "->new") {
                     return s1 + s2;
-                } else if (c == " " || c == "." || c == "(" || c == "[" || c == "{" || c == "<" || s1 == "!" || s1 == "++" || s1 == "--") {
+                } else if (c == " " || c == "." || c == "(" || c == "[" || c == "{" || c == "<" || s1 == "!" || s1 == "++" || s1 == "--" || c2 == "->") {
                     return s1 + s2;
                 } else {
                     return s1 + op + s2;
@@ -128,12 +136,16 @@ class ParseObject {
             return s1 + s2;
         }
     }
+    private perl_prefix(str: string): boolean {
+        return str == "_$" || str == "_$&" || str == "_$get_" || str == "_$set_";
+    }
     private format(formatstr: string, list: ParseObject[], n: number): string {
         // $n 1行
         // @n 複数行
         var s = "";
         var linechanged = false;
         var formatlist = formatstr.split(" ");
+        var prev = "";
         for (var i = 0; i < formatlist.length; i++) {
             var f = formatlist[i]; 
             if (f == "_(_") {
@@ -148,23 +160,37 @@ class ParseObject {
                     if (!this.thisneed && i == 1 && s == "this" && arg == ".") {
                         // this は要らない。this. は消去
                         s = "";
+                        if (this.perl && i < formatlist.length - 1 && this.perl_prefix(formatlist[i + 1])) {
+                            i++;
+                        }
                     } else {
-                        s = this.concat(s, " ", arg);
+                        if (this.perl && prev == "_$" && arg != "" && arg[0] == "$") {
+                            s = this.concat(s, " ", arg.substr(1));
+                        } else if (this.perl && prev != "" && arg != "" && arg[0] == "$") {
+                            s = this.concat(s, " ", prev.substr(2) + arg.substr(1));
+                        } else {
+                            s = this.concat(s, " ", arg);
+                        }
                     }
                 }
                 linechanged = false;
+                prev = "";
             } else if (f[0] == ",") {
                 var x = Number(f.substr(1));
                 if (list[x]) {
                     s = this.concat(s, " ", list[x].toTypeScript(", ", n));
                 }
                 linechanged = false;
-            } else if (f[0] == "@") {
+                prev = "";
+            } else if (f != "@_;" && f[0] == "@") {
                 var x = Number(f.substr(1));
                 if (list[x]) {
                     s = this.concat(s, "\r\n", list[x].toTypeScript("nl", n + 1));
                 }
                 linechanged = true;
+                prev = "";
+            } else if (this.perl && this.perl_prefix(f) && i < formatlist.length - 1) {
+                prev = f;
             } else {
                 if (linechanged) {
                     s += this.indent(n) + f;
@@ -172,9 +198,37 @@ class ParseObject {
                     s = this.concat(s, " ", f);
                 }
                 linechanged = false;
+                prev = "";
             }
         }
         return s;
+    }
+    private format_block(x: number, list: ParseObject[], n: number, first_line: string, last_line: string): string {
+        var s = "{\r\n";
+        if (first_line != "") {
+            s += this.indent(n + 1) + first_line + "\r\n";
+        }
+        if (list[x]) {
+            if (list[x].kinde == ts.SyntaxKind.Block) {
+                //s = this.concat(s, "\r\n", list[x].children[0].toTypeScript("nl", n + 1));
+                s += list[x].children[0].toTypeScript("nl", n + 1);
+            } else {
+                // ブロックではないときブロックにする
+                s += this.indent(n) + list[x].toTypeScript(" ", n) + ";\r\n";
+            }
+        }
+        if (last_line != "") {
+            s += this.indent(n + 1) + last_line + "\r\n";
+        }
+        return s + this.indent(n) + "}";
+    }
+    private format_prms_block(prm_n: number, block_n: number, list: ParseObject[], n: number): string {
+        var prms = this.format("," + String(prm_n), this.children, n);
+        var prmline = "";
+        if (prms != "") {
+            prmline = "my (" + prms + ") = @_;";
+        }
+        return this.format_block(block_n, this.children, n, prmline, "");
     }
     private escapestring(s: string) {
         var res = "";
@@ -201,6 +255,16 @@ class ParseObject {
         }
         return "\"" + res + "\"";
     }
+    private opt(ptn: string, n: number, cond: boolean): string {
+        if (cond && this.children[n]) {
+            return ptn.replace("$", "$" + String(n));
+        } else {
+            return "";
+        }
+    }
+    //private isidentifier(n: number): boolean {
+    //    return this.children[n].kinde == ts.SyntaxKind.Identifier;
+    //}
     public toTypeScript(op: string, n: number): string {
         if (op == "nl") {
             if (this.kinde == 0) {
@@ -240,57 +304,33 @@ class ParseObject {
                 //    visitNode(cbNode, (<ts.ShorthandPropertyAssignment>node).objectAssignmentInitializer)]);
                 return this.format("$0 $1 ::ShorthandPropertyAssignment:: $2 $3 $4 $5", this.children, n);
             case ts.SyntaxKind.Parameter:
-            case ts.SyntaxKind.PropertyDeclaration:
-                if (this.children[6]) {
-                    if (this.children[7]) {
-                        return this.format("$0 $1 $2 $3 $4 $5 : $6 = $7", this.children, n);
-                    } else {
-                        return this.format("$0 $1 $2 $3 $4 $5 : $6", this.children, n);
-                    }
+                if (this.perl) {
+                    var init_opt = this.opt(" = $", 7, true);
+                    return this.format("$2 $3 $4 $5" + init_opt, this.children, n);
                 } else {
-                    if (this.children[7]) {
-                        return this.format("$0 $1 $2 $3 $4 $5 = $7", this.children, n);
-                    } else {
-                        return this.format("$0 $1 $2 $3 $4 $5", this.children, n);
-                    }
+                    var type_opt = this.opt(" : $", 6, this.typed);
+                    var init_opt = this.opt(" = $", 7, true);
+                    return this.format("$0 $1 $2 $3 $4 $5" + type_opt + init_opt, this.children, n);
                 }
+            case ts.SyntaxKind.PropertyDeclaration:
             case ts.SyntaxKind.PropertySignature:
-                return this.format("$0 $1 ::PropertySignature:: $2 $3 $4 $5 : $6 = $7", this.children, n);
             case ts.SyntaxKind.PropertyAssignment:
-                if (this.children[6]) {
-                    if (this.children[7]) {
-                        return this.format("$0 $1 $2 $3 $4 $5 : $6 : $7", this.children, n);
-                    } else {
-                        return this.format("$0 $1 $2 $3 $4 $5 : $6", this.children, n);
-                    }
+                if (this.perl) {
+                    var init_opt = this.opt(" = $", 7, true);
+                    return this.format("my $2 $3 $4 $5" + init_opt, this.children, n);
                 } else {
-                    if (this.children[7]) {
-                        return this.format("$0 $1 $2 $3 $4 $5 : $7", this.children, n);
-                    } else {
-                        return this.format("$0 $1 $2 $3 $4 $5", this.children, n);
-                    }
+                    var type_opt = this.opt(" : $", 6, this.typed);
+                    var init_opt = this.opt(" = $", 7, true);
+                    return this.format("$0 $1 $2 $3 $4 $5" + type_opt + init_opt, this.children, n);
                 }
             case ts.SyntaxKind.VariableDeclaration:
                 if (this.perl) {
-                    if (this.children[7]) {
-                        return this.format("$0 $1 my $2 $3 $4 $5 = $7", this.children, n);
-                    } else {
-                        return this.format("$0 $1 my $2 $3 $4 $5", this.children, n);
-                    }
+                    var init_opt = this.opt(" = $", 7, true);
+                    return this.format("my $2 $3 $4 $5" + init_opt, this.children, n);
                 } else {
-                    if (this.children[6]) {
-                        if (this.children[7]) {
-                            return this.format("$0 $1 var $2 $3 $4 $5 : $6 = $7", this.children, n);
-                        } else {
-                            return this.format("$0 $1 var $2 $3 $4 $5 : $6", this.children, n);
-                        }
-                    } else {
-                        if (this.children[7]) {
-                            return this.format("$0 $1 var $2 $3 $4 $5 = $7", this.children, n);
-                        } else {
-                            return this.format("$0 $1 var $2 $3 $4 $5", this.children, n);
-                        }
-                    }
+                    var type_opt = this.opt(" : $", 6, this.typed);
+                    var init_opt = this.opt(" = $", 7, true);
+                    return this.format("$0 $1 var $2 $3 $4 $5" + type_opt + init_opt, this.children, n);
                 }
             case ts.SyntaxKind.BindingElement:
                 //return col([visitNodes(cbNodes, node.decorators),
@@ -301,7 +341,9 @@ class ParseObject {
                 //    visitNode(cbNode, (<ts.VariableLikeDeclaration>node).questionToken),
                 //    visitNode(cbNode, (<ts.VariableLikeDeclaration>node).type),
                 //    visitNode(cbNode, (<ts.VariableLikeDeclaration>node).initializer)]);
-                return this.format("$0 $1 ::BindingElement:: $2 $3 $4 $5 : $6 = $7", this.children, n);
+                var type_opt = this.opt(" : $", 6, this.typed);
+                var init_opt = this.opt(" = $", 7, true);
+                return this.format("$0 $1 ::BindingElement:: $2 $3 $4 $5" + type_opt + init_opt, this.children, n);
             case ts.SyntaxKind.FunctionType:
                 return this.format("::FunctionType:: $0 $1 $2 $3 $4", this.children, n);
             case ts.SyntaxKind.ConstructorType:
@@ -318,19 +360,47 @@ class ParseObject {
                 //    visitNode(cbNode, (<ts.SignatureDeclaration>node).type)]);
                 return this.format("::IndexSignature:: $0 $1 $2 $3 $4", this.children, n);
             case ts.SyntaxKind.MethodDeclaration:
-                return this.format("$0 $1 $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
             case ts.SyntaxKind.MethodSignature:
-                return this.format("$0 $1 ::MethodSignature:: $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                if (this.perl) {
+                    var block = this.format_prms_block(6, 9, this.children, n);
+                    return this.format("sub $2 _$ $3 $4 $5 $8", this.children, n) + " " + block;
+                } else {
+                    var type_opt = this.opt(" : $", 7, this.typed);
+                    return this.format("$0 $1 $2 $3 $4 $5 ( ,6 )" + type_opt + " $8 $9", this.children, n);
+                }
             case ts.SyntaxKind.Constructor:
-                return this.format("$0 $1 constructor $2 $3 $4 $5 ( ,6 ) $7 $8 $9", this.children, n);
+                if (this.perl) {
+                    var block = this.format_prms_block(6, 9, this.children, n);
+                    return this.format("sub new $2 $3 $4 $5 $8", this.children, n) + " " + block;
+                } else {
+                    var type_opt = this.opt(" : $", 7, this.typed);
+                    return this.format("$0 $1 constructor $2 $3 $4 $5 ( ,6 )" + type_opt + " $8 $9", this.children, n);
+                }
             case ts.SyntaxKind.GetAccessor:
-                return this.format("$0 $1 get $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                if (this.perl) {
+                    var block = this.format_prms_block(6, 9, this.children, n);
+                    return this.format("sub $2 _$get_ $3 $4 $5 $8", this.children, n) + " " + block;
+                } else {
+                    var type_opt = this.opt(" : $", 7, this.typed);
+                    return this.format("$0 $1 get $2 $3 $4 $5 ( ,6 )" + type_opt + " $8 $9", this.children, n);
+                }
             case ts.SyntaxKind.SetAccessor:
-                return this.format("$0 $1 set $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                if (this.perl) {
+                    var block = this.format_prms_block(6, 9, this.children, n);
+                    return this.format("sub $2 _$set_ $3 $4 $5 $8", this.children, n) + " " + block;
+                } else {
+                    var type_opt = this.opt(" : $", 7, this.typed);
+                    return this.format("$0 $1 set $2 $3 $4 $5 ( ,6 )" + type_opt + " $8 $9", this.children, n);
+                }
             case ts.SyntaxKind.FunctionExpression:
-                return this.format("$0 $1 function $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
             case ts.SyntaxKind.FunctionDeclaration:
-                return this.format("$0 $1 function $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                if (this.perl) {
+                    var block = this.format_prms_block(6, 9, this.children, n);
+                    return this.format("sub $2 _$ $3 $4 $5 $8", this.children, n) + " " + block;
+                } else {
+                    var type_opt = this.opt(" : $", 7, this.typed);
+                    return this.format("$0 $1 function $2 $3 $4 $5 ( ,6 )" + type_opt + " $8 $9", this.children, n);
+                }
             case ts.SyntaxKind.ArrowFunction:
                 //return col([visitNodes(cbNodes, node.decorators),
                 //    visitNodes(cbNodes, node.modifiers),
@@ -342,15 +412,12 @@ class ParseObject {
                 //    visitNode(cbNode, (<ts.FunctionLikeDeclaration>node).type),
                 //    visitNode(cbNode, (<ts.ArrowFunction>node).equalsGreaterThanToken),
                 //    visitNode(cbNode, (<ts.FunctionLikeDeclaration>node).body)]);
-                return this.format("$0 $1 ::ArrowFunction:: $2 $3 $4 $5 ( ,6 ) : $7 $8 $9", this.children, n);
+                var type_opt = this.opt(" : $", 7, this.typed);
+                return this.format("$0 $1 $2 $3 $4 $5 ( ,6 )" + type_opt + " $8 $9", this.children, n);
             case ts.SyntaxKind.TypeReference:
                 //return col([visitNode(cbNode, (<ts.TypeReferenceNode>node).typeName),
                 //    visitNodes(cbNodes, (<ts.TypeReferenceNode>node).typeArguments)]);
-                if (this.children[1]) {
-                    return this.format("$0 < $1 >", this.children, n);
-                } else {
-                    return this.format("$0", this.children, n);
-                }
+                return this.format("$0" + this.opt(" < $ >", 1, this.typed), this.children, n);
             case ts.SyntaxKind.TypePredicate:
                 //return col([visitNode(cbNode, (<ts.TypePredicateNode>node).parameterName),
                 //    visitNode(cbNode, (<ts.TypePredicateNode>node).type)]);
@@ -388,14 +455,14 @@ class ParseObject {
                 //return col([visitNode(cbNode, (<ts.PropertyAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).dotToken),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).name)]);
-                return this.format("$0 $1 $2", this.children, n);
+                return this.format("$0 $1 _$ $2", this.children, n);
             case ts.SyntaxKind.ElementAccessExpression:
                 //return col([visitNode(cbNode, (<ts.ElementAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.ElementAccessExpression>node).argumentExpression)]);
                 return this.format("$0 [ $1 ]", this.children, n);
             case ts.SyntaxKind.CallExpression:
                 if (this.perl) {
-                    return this.format("& $0 $1 ( ,2 )", this.children, n);
+                    return this.format("_$& $0 $1 ( ,2 )", this.children, n);
                 } else {
                     return this.format("$0 $1 ( ,2 )", this.children, n);
                 }
@@ -403,10 +470,10 @@ class ParseObject {
                 //return col([visitNode(cbNode, (<ts.CallExpression>node).expression),
                 //    visitNodes(cbNodes, (<ts.CallExpression>node).typeArguments),
                 //    visitNodes(cbNodes, (<ts.CallExpression>node).arguments)]);
-                if (this.children[1]) {
-                    return this.format("new $0 < $1 > ( ,2 )", this.children, n);
+                if (this.perl) {
+                    return this.format("_$ $0 ->new" + " ( ,2 )", this.children, n);
                 } else {
-                    return this.format("new $0 ( ,2 )", this.children, n);
+                    return this.format("new $0" + this.opt(" < $ >", 1, this.typed) + " ( ,2 )", this.children, n);
                 }
             case ts.SyntaxKind.TaggedTemplateExpression:
                 //return col([visitNode(cbNode, (<ts.TaggedTemplateExpression>node).tag),
@@ -573,7 +640,11 @@ class ParseObject {
                 //    visitNodes(cbNodes, (<ts.ClassLikeDeclaration>node).typeParameters),
                 //    visitNodes(cbNodes, (<ts.ClassLikeDeclaration>node).heritageClauses),
                 //    visitNodes(cbNodes, (<ts.ClassLikeDeclaration>node).members)]);
-                return this.format("$0 $1 class $2 $3 $4 { @5 }", this.children, n);
+                if (this.perl) {
+                    return this.format("$0 $1 package _$ $2 $3 $4 ; @5 1", this.children, n);
+                } else {
+                    return this.format("$0 $1 class $2 $3 $4 { @5 }", this.children, n);
+                }
             case ts.SyntaxKind.InterfaceDeclaration:
                 //return col([visitNodes(cbNodes, node.decorators),
                 //    visitNodes(cbNodes, node.modifiers),
@@ -995,7 +1066,7 @@ class ParseObject {
             case ts.SyntaxKind.LastFutureReservedWord:
                 return this.kind;
             case ts.SyntaxKind.AbstractKeyword:
-                return "";
+                return "abstract";
             case ts.SyntaxKind.AsKeyword:
                 return "as";
             case ts.SyntaxKind.AnyKeyword:

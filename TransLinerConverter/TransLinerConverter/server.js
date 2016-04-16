@@ -29,10 +29,12 @@ function syntaxKindToObject(syntaxKind) {
 }
 var fs = require("fs");
 var filename = "./TLPage.ts";
+var filename_dest = "./TLPage.pm";
 var text = fs.readFileSync(filename, "UTF-8");
-var sourceFile = ts.createSourceFile("file.ts", text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
+var sourceFile = ts.createSourceFile("TLPage.ts", text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
 //let result = convertToObject(sourceFile).print(0);
 var result = convertToObject(sourceFile).toTypeScript(" ", -1);
+fs.writeFileSync(filename_dest, result, "UTF-8");
 //let caselist = "";
 //for (var i = 0; i < ts.SyntaxKind.Count; i++) {
 //    caselist += "case ts.SyntaxKind." + ts.SyntaxKind[i] + ":\r\n";

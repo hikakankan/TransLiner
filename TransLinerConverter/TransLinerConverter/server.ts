@@ -32,12 +32,15 @@ function syntaxKindToObject(syntaxKind: ts.SyntaxKind): ParseObject {
 import * as fs from "fs";
 
 var filename = "./TLPage.ts";
+var filename_dest = "./TLPage.pm";
 
 let text = fs.readFileSync(filename, "UTF-8");
 
-let sourceFile = ts.createSourceFile("file.ts", text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
+let sourceFile = ts.createSourceFile("TLPage.ts", text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
 //let result = convertToObject(sourceFile).print(0);
 let result = convertToObject(sourceFile).toTypeScript(" ", -1);
+
+fs.writeFileSync(filename_dest, result, "UTF-8");
 
 //let caselist = "";
 //for (var i = 0; i < ts.SyntaxKind.Count; i++) {
