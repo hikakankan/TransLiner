@@ -30,7 +30,8 @@ var ParseObject = (function () {
         else if (language == "perl") {
             this.clike = true;
             this.typed = false;
-            this.thisneed = false;
+            //this.thisneed = false;
+            this.thisneed = true;
             this.perl = true;
             this.prop = false;
         }
@@ -109,6 +110,26 @@ var ParseObject = (function () {
         }
         return s;
     };
+    ParseObject.prototype.proplist = function (list) {
+        var props = new Array();
+        if (list != null) {
+            for (var _i = 0, list_3 = list; _i < list_3.length; _i++) {
+                var obj = list_3[_i];
+                if (obj != null) {
+                    switch (obj.kinde) {
+                        case ts.SyntaxKind.PropertyDeclaration:
+                        case ts.SyntaxKind.PropertySignature:
+                        case ts.SyntaxKind.PropertyAssignment:
+                            var name = obj.children[2];
+                            if (name.kinde == ts.SyntaxKind.Identifier) {
+                                props.push(name.text);
+                            }
+                    }
+                }
+            }
+        }
+        return props;
+    };
     ParseObject.prototype.concat = function (s1, op, s2) {
         if (s1 != "" && s2 != "") {
             if (op == " ") {
@@ -167,8 +188,8 @@ var ParseObject = (function () {
                 var x = Number(f.substr(1));
                 if (list[x]) {
                     var arg = list[x].toTypeScript(" ", n);
-                    if (!this.thisneed && i == 1 && s == "this" && arg == ".") {
-                        // this は要らない。this. は消去
+                    if (!this.thisneed && i == 1 && s == "this" && (arg == "." || arg == "->")) {
+                        // this は要らない。this. this-> は消去
                         s = "";
                         if (this.perl && i < formatlist.length - 1 && this.perl_prefix(formatlist[i + 1])) {
                             i++;
@@ -209,11 +230,20 @@ var ParseObject = (function () {
                 prev = f;
             }
             else {
-                if (linechanged) {
-                    s += this.indent(n) + f;
+                if (!this.thisneed && i == 1 && s == "this" && (f == "." || f == "->")) {
+                    // this は要らない。this. this-> は消去 変換されない場合はここでチェックする
+                    s = "";
+                    if (this.perl && i < formatlist.length - 1 && this.perl_prefix(formatlist[i + 1])) {
+                        i++;
+                    }
                 }
                 else {
-                    s = this.concat(s, " ", f);
+                    if (linechanged) {
+                        s += this.indent(n) + f;
+                    }
+                    else {
+                        s = this.concat(s, " ", f);
+                    }
                 }
                 linechanged = false;
                 prev = "";
@@ -243,11 +273,21 @@ var ParseObject = (function () {
     };
     ParseObject.prototype.format_prms_block = function (prm_n, block_n, list, n) {
         var prms = this.format("," + String(prm_n), this.children, n);
-        var prmline = "";
+        var prmline = "my $this = shift;";
         if (prms != "") {
-            prmline = "my (" + prms + ") = @_;";
+            prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
         }
         return this.format_block(block_n, this.children, n, prmline, "");
+    };
+    ParseObject.prototype.format_constructor_block = function (prm_n, block_n, list, n) {
+        var prms = this.format("," + String(prm_n), this.children, n);
+        var prmline = "my $class = shift;";
+        if (prms != "") {
+            prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
+        }
+        var accessor = "my $self = {";
+        accessor += "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
+        return this.format_block(block_n, this.children, n, prmline, accessor);
     };
     ParseObject.prototype.escapestring = function (s) {
         var res = "";
@@ -405,7 +445,7 @@ var ParseObject = (function () {
                 }
             case ts.SyntaxKind.Constructor:
                 if (this.perl) {
-                    var block = this.format_prms_block(6, 9, this.children, n);
+                    var block = this.format_constructor_block(6, 9, this.children, n);
                     return this.format("sub new $2 $3 $4 $5 $8", this.children, n) + " " + block;
                 }
                 else {
@@ -494,14 +534,24 @@ var ParseObject = (function () {
                 //return col([visitNode(cbNode, (<ts.PropertyAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).dotToken),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).name)]);
-                return this.format("$0 $1 _$ $2", this.children, n);
+                if (this.perl) {
+                    return this.format("$0 -> _$ $2", this.children, n);
+                }
+                else {
+                    return this.format("$0 $1 _$ $2", this.children, n);
+                }
             case ts.SyntaxKind.ElementAccessExpression:
                 //return col([visitNode(cbNode, (<ts.ElementAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.ElementAccessExpression>node).argumentExpression)]);
                 return this.format("$0 [ $1 ]", this.children, n);
             case ts.SyntaxKind.CallExpression:
                 if (this.perl) {
-                    return this.format("_$& $0 $1 ( ,2 )", this.children, n);
+                    if (this.children[0].kinde == ts.SyntaxKind.PropertyAccessExpression) {
+                        return this.format("$0 ( ,2 )", this.children, n);
+                    }
+                    else {
+                        return this.format("_$& $0 ( ,2 )", this.children, n);
+                    }
                 }
                 else {
                     return this.format("$0 $1 ( ,2 )", this.children, n);
@@ -1071,7 +1121,12 @@ var ParseObject = (function () {
             case ts.SyntaxKind.SwitchKeyword:
                 return "switch";
             case ts.SyntaxKind.ThisKeyword:
-                return "this";
+                if (this.perl && this.thisneed) {
+                    return "$this";
+                }
+                else {
+                    return "this";
+                }
             case ts.SyntaxKind.ThrowKeyword:
                 return "throw";
             case ts.SyntaxKind.TrueKeyword:

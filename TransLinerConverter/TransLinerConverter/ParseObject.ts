@@ -23,7 +23,8 @@ class ParseObject {
         } else if (language == "perl") {
             this.clike = true;
             this.typed = false;
-            this.thisneed = false;
+            //this.thisneed = false;
+            this.thisneed = true;
             this.perl = true;
             this.prop = false;
         }
@@ -105,6 +106,25 @@ class ParseObject {
         }
         return s;
     }
+    private proplist(list: ParseObject[]): string[] {
+        var props = new Array<string>();
+        if (list != null) {
+            for (var obj of list) {
+                if (obj != null) {
+                    switch (obj.kinde) {
+                        case ts.SyntaxKind.PropertyDeclaration:
+                        case ts.SyntaxKind.PropertySignature:
+                        case ts.SyntaxKind.PropertyAssignment:
+                            var name = obj.children[2];
+                            if (name.kinde == ts.SyntaxKind.Identifier) {
+                                props.push(name.text);
+                            }
+                    }
+                }
+            }
+        }
+        return props;
+    }
     private concat(s1: string, op: string, s2: string): string {
         if (s1 != "" && s2 != "") {
             if (op == " ") {
@@ -157,8 +177,8 @@ class ParseObject {
                 var x = Number(f.substr(1));
                 if (list[x]) {
                     var arg = list[x].toTypeScript(" ", n);
-                    if (!this.thisneed && i == 1 && s == "this" && arg == ".") {
-                        // this は要らない。this. は消去
+                    if (!this.thisneed && i == 1 && s == "this" && (arg == "." || arg == "->")) {
+                        // this は要らない。this. this-> は消去
                         s = "";
                         if (this.perl && i < formatlist.length - 1 && this.perl_prefix(formatlist[i + 1])) {
                             i++;
@@ -192,10 +212,18 @@ class ParseObject {
             } else if (this.perl && this.perl_prefix(f) && i < formatlist.length - 1) {
                 prev = f;
             } else {
-                if (linechanged) {
-                    s += this.indent(n) + f;
+                if (!this.thisneed && i == 1 && s == "this" && (f == "." || f == "->")) {
+                    // this は要らない。this. this-> は消去 変換されない場合はここでチェックする
+                    s = "";
+                    if (this.perl && i < formatlist.length - 1 && this.perl_prefix(formatlist[i + 1])) {
+                        i++;
+                    }
                 } else {
-                    s = this.concat(s, " ", f);
+                    if (linechanged) {
+                        s += this.indent(n) + f;
+                    } else {
+                        s = this.concat(s, " ", f);
+                    }
                 }
                 linechanged = false;
                 prev = "";
@@ -224,11 +252,21 @@ class ParseObject {
     }
     private format_prms_block(prm_n: number, block_n: number, list: ParseObject[], n: number): string {
         var prms = this.format("," + String(prm_n), this.children, n);
-        var prmline = "";
+        var prmline = "my $this = shift;";
         if (prms != "") {
-            prmline = "my (" + prms + ") = @_;";
+            prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
         }
         return this.format_block(block_n, this.children, n, prmline, "");
+    }
+    private format_constructor_block(prm_n: number, block_n: number, list: ParseObject[], n: number): string {
+        var prms = this.format("," + String(prm_n), this.children, n);
+        var prmline = "my $class = shift;";
+        if (prms != "") {
+            prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
+        }
+        var accessor = "my $self = {";
+        accessor += "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
+        return this.format_block(block_n, this.children, n, prmline, accessor);
     }
     private escapestring(s: string) {
         var res = "";
@@ -370,7 +408,7 @@ class ParseObject {
                 }
             case ts.SyntaxKind.Constructor:
                 if (this.perl) {
-                    var block = this.format_prms_block(6, 9, this.children, n);
+                    var block = this.format_constructor_block(6, 9, this.children, n);
                     return this.format("sub new $2 $3 $4 $5 $8", this.children, n) + " " + block;
                 } else {
                     var type_opt = this.opt(" : $", 7, this.typed);
@@ -455,14 +493,22 @@ class ParseObject {
                 //return col([visitNode(cbNode, (<ts.PropertyAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).dotToken),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).name)]);
-                return this.format("$0 $1 _$ $2", this.children, n);
+                if (this.perl) {
+                    return this.format("$0 -> _$ $2", this.children, n);
+                } else {
+                    return this.format("$0 $1 _$ $2", this.children, n);
+                }
             case ts.SyntaxKind.ElementAccessExpression:
                 //return col([visitNode(cbNode, (<ts.ElementAccessExpression>node).expression),
                 //    visitNode(cbNode, (<ts.ElementAccessExpression>node).argumentExpression)]);
                 return this.format("$0 [ $1 ]", this.children, n);
             case ts.SyntaxKind.CallExpression:
                 if (this.perl) {
-                    return this.format("_$& $0 $1 ( ,2 )", this.children, n);
+                    if (this.children[0].kinde == ts.SyntaxKind.PropertyAccessExpression) {
+                        return this.format("$0 ( ,2 )", this.children, n);
+                    } else {
+                        return this.format("_$& $0 ( ,2 )", this.children, n);
+                    }
                 } else {
                     return this.format("$0 $1 ( ,2 )", this.children, n);
                 }
@@ -1030,7 +1076,11 @@ class ParseObject {
             case ts.SyntaxKind.SwitchKeyword:
                 return "switch";
             case ts.SyntaxKind.ThisKeyword:
-                return "this";
+                if (this.perl && this.thisneed) {
+                    return "$this";
+                } else {
+                    return "this";
+                }
             case ts.SyntaxKind.ThrowKeyword:
                 return "throw";
             case ts.SyntaxKind.TrueKeyword:

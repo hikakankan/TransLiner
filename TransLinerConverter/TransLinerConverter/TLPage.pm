@@ -1,64 +1,78 @@
 package TLPageCollection;
     my $Collection;
     sub new {
-        $Collection = Array->new();
+        my $class = shift;
+        $this->Collection = Array->new();
+        my $self = {}
+        return bless $self, $class;
     }
     sub get_Count {
-        return $Collection.length;
+        my $this = shift;
+        return $this->Collection->length;
     }
     sub Last {
-        return $Collection[$Collection.length - 1];
+        my $this = shift;
+        return $this->Collection[$this->Collection->length - 1];
     }
     sub RemoveAt {
+        my $this = shift;
         my ($index) = @_;
-        &Collection.splice($index, 1);
+        $this->Collection->splice($index, 1);
     }
     sub Insert {
+        my $this = shift;
         my ($index, $page) = @_;
-        &Collection.splice($index, 0, $page);
+        $this->Collection->splice($index, 0, $page);
     }
     sub Add {
+        my $this = shift;
         my ($page) = @_;
-        &Collection.push($page);
+        $this->Collection->push($page);
     }
     sub Clear {
-        $Collection = Array->new();
+        my $this = shift;
+        $this->Collection = Array->new();
     }
 1;
 package TLPage;
     sub new {
+        my $class = shift;
         my ($title, $text, $root, $Settings) = @_;
-        $title = $title;
-        $text = $text;
-        $root = $root;
-        $SubPages = TLPageCollection->new();
-        $loaded = true;
-        $filename = "";
-        $pagePath = "";
+        $this->title = $title;
+        $this->text = $text;
+        $this->root = $root;
+        $this->SubPages = TLPageCollection->new();
+        $this->loaded = true;
+        $this->filename = "";
+        $this->pagePath = "";
+        my $self = {}
+        return bless $self, $class;
     }
     my $loaded;
     my $filename;
     my $root;
     my $SubPages;
     sub UnselectAll {
-        $IsSelected = false;
-        for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-            &SubPages.Collection[$i].UnselectAll();
+        my $this = shift;
+        $this->IsSelected = false;
+        for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+            $this->SubPages->Collection[$i]->UnselectAll();
         }
     }
     sub getLine {
+        my $this = shift;
         my ($text) = @_;
-        my $r = &text.indexOf("\r");
-        my $n = &text.indexOf("\n");
+        my $r = $text->indexOf("\r");
+        my $n = $text->indexOf("\n");
         if ( $r >= 0 ) then {
             if ( $n >= 0 ) then {
-                return &text.substring(0, &Math.min($r, $n));
+                return $text->substring(0, $Math->min($r, $n));
             } else {
-                return &text.substring(0, $r);
+                return $text->substring(0, $r);
             }
         } else {
             if ( $n >= 0 ) then {
-                return &text.substring(0, $n);
+                return $text->substring(0, $n);
             } else {
                 return $text;
             }
@@ -66,23 +80,25 @@ package TLPage;
     }
     my $title = "";
     sub getTitle {
+        my $this = shift;
         my ($text) = @_;
-        if ( $Settings.NoTitle ) then {
-            my $line = &getLine($text);
-            if ( $line.length <= $Settings.TitleLength ) then {
+        if ( $this->Settings->NoTitle ) then {
+            my $line = $this->getLine($text);
+            if ( $line->length <= $this->Settings->TitleLength ) then {
                 return $line;
             } else {
-                return &line.substring(0, $Settings.TitleLength);
+                return $line->substring(0, $this->Settings->TitleLength);
             }
         } else {
-            return $title;
+            return $this->title;
         }
     }
     sub get_Title {
-        my $title = &getTitle($text);
+        my $this = shift;
+        my $title = $this->getTitle($this->text);
         if ( $title == "" ) then {
-            if ( $title != "" ) then {
-                return $title;
+            if ( $this->title != "" ) then {
+                return $this->title;
             }
             return "タイトルなし";
         } else {
@@ -90,46 +106,55 @@ package TLPage;
         }
     }
     sub set_Title {
+        my $this = shift;
         my ($title) = @_;
-        $title = $title;
+        $this->title = $title;
     }
     my $text = "";
     sub get_Text {
-        &loadPageFile();
-        return $text;
+        my $this = shift;
+        $this->loadPageFile();
+        return $this->text;
     }
     sub set_Text {
+        my $this = shift;
         my ($value) = @_;
-        $text = $value;
+        $this->text = $value;
     }
     my $isSelected = false;
     my $isExpanded = false;
     sub get_IsSelected {
-        return $isSelected;
+        my $this = shift;
+        return $this->isSelected;
     }
     sub set_IsSelected {
+        my $this = shift;
         my ($value) = @_;
-        $isSelected = $value;
+        $this->isSelected = $value;
     }
     sub get_IsExpanded {
-        return $isExpanded;
+        my $this = shift;
+        return $this->isExpanded;
     }
     sub set_IsExpanded {
+        my $this = shift;
         my ($value) = @_;
         if ( $value ) then {
-            &loadPageFile();
+            $this->loadPageFile();
         }
-        $isExpanded = $value;
+        $this->isExpanded = $value;
     }
     sub CanExpand {
-        return !$IsExpanded && !$loaded || $SubPages.Count > 0;
+        my $this = shift;
+        return !$this->IsExpanded && !$this->loaded || $this->SubPages->Count > 0;
     }
     sub get_SelectedPage_ {
-        if ( $IsSelected ) then {
-            return this;
+        my $this = shift;
+        if ( $this->IsSelected ) then {
+            return $this;
         } else {
-            for ( my $page of $SubPages.Collection ) {
-                my $selectedPage = $page.SelectedPage_;
+            for ( my $page of $this->SubPages->Collection ) {
+                my $selectedPage = $page->SelectedPage_;
                 if ( $selectedPage != null ) then {
                     return $selectedPage;
                 }
@@ -138,12 +163,15 @@ package TLPage;
         return null;
     }
     sub validIndex {
+        my $this = shift;
         my ($index, $count) = @_;
     }
     sub validIndex {
+        my $this = shift;
         my ($index) = @_;
     }
     sub validIndex {
+        my $this = shift;
         my ($index, $count ?) = @_;
         if ( $count != null ) then {
             return $index >= 0 && $index < $count;
@@ -152,17 +180,18 @@ package TLPage;
         }
     }
     sub MoveLeft {
+        my $this = shift;
         my ($parent, $myIndex, $parentparent, $parentIndex, $dest) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) && &validIndex($parentIndex) ) then {
-                &parent.SubPages.RemoveAt($myIndex);
-                &parentparent.SubPages.Insert($parentIndex + $dest, this);
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) && $this->validIndex($parentIndex) ) then {
+                $parent->SubPages->RemoveAt($myIndex);
+                $parentparent->SubPages->Insert($parentIndex + $dest, $this);
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.MoveLeft(this, $i, $parent, $myIndex, $dest) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->MoveLeft($this, $i, $parent, $myIndex, $dest) ) then {
                     return true;
                 }
             }
@@ -170,24 +199,25 @@ package TLPage;
         return false;
     }
     sub MoveRight {
+        my $this = shift;
         my ($parent, $myIndex, $destBefore, $destAfter, $destTop) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) && &validIndex($myIndex + $destBefore, $parent.SubPages.Count) ) then {
-                &parent.SubPages.RemoveAt($myIndex);
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) && $this->validIndex($myIndex + $destBefore, $parent->SubPages->Count) ) then {
+                $parent->SubPages->RemoveAt($myIndex);
                 if ( $destTop ) then {
-                    &parent.SubPages.Collection[$myIndex + $destAfter].SubPages.Insert(0, this);
+                    $parent->SubPages->Collection[$myIndex + $destAfter]->SubPages->Insert(0, $this);
                 } else {
-                    &parent.SubPages.Collection[$myIndex + $destAfter].SubPages.Add(this);
+                    $parent->SubPages->Collection[$myIndex + $destAfter]->SubPages->Add($this);
                 }
-                if ( !$parent.SubPages.Collection[$myIndex + $destAfter].IsExpanded ) then {
-                    $parent.SubPages.Collection[$myIndex + $destAfter].IsExpanded = true;
+                if ( !$parent->SubPages->Collection[$myIndex + $destAfter]->IsExpanded ) then {
+                    $parent->SubPages->Collection[$myIndex + $destAfter]->IsExpanded = true;
                 }
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.MoveRight(this, $i, $destBefore, $destAfter, $destTop) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->MoveRight($this, $i, $destBefore, $destAfter, $destTop) ) then {
                     return true;
                 }
             }
@@ -195,17 +225,18 @@ package TLPage;
         return false;
     }
     sub Move {
+        my $this = shift;
         my ($parent, $myIndex, $dest) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) && &validIndex($myIndex + $dest, $parent.SubPages.Count) ) then {
-                &parent.SubPages.RemoveAt($myIndex);
-                &parent.SubPages.Insert($myIndex + $dest, this);
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) && $this->validIndex($myIndex + $dest, $parent->SubPages->Count) ) then {
+                $parent->SubPages->RemoveAt($myIndex);
+                $parent->SubPages->Insert($myIndex + $dest, $this);
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.Move(this, $i, $dest) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->Move($this, $i, $dest) ) then {
                     return true;
                 }
             }
@@ -213,29 +244,30 @@ package TLPage;
         return false;
     }
     sub SelectedMove {
+        my $this = shift;
         my ($parent, $myIndex, $dest) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) && $myIndex + $dest == - 1 ) then {
-                $parent.IsSelected = true;
-            } else if ( &validIndex($myIndex) && $myIndex + $dest == $parent.SubPages.Count ) then {
-                $parent.IsSelected = true;
-                &root.SelectedDownOver(null, - 1);
-            } else if ( $IsExpanded && $dest == 1 ) then {
-                if ( $SubPages.Count > 0 ) then {
-                    $SubPages.Collection[0].IsSelected = true;
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) && $myIndex + $dest == - 1 ) then {
+                $parent->IsSelected = true;
+            } else if ( $this->validIndex($myIndex) && $myIndex + $dest == $parent->SubPages->Count ) then {
+                $parent->IsSelected = true;
+                $this->root->SelectedDownOver(null, - 1);
+            } else if ( $this->IsExpanded && $dest == 1 ) then {
+                if ( $this->SubPages->Count > 0 ) then {
+                    $this->SubPages->Collection[0]->IsSelected = true;
                 }
-            } else if ( &validIndex($myIndex) && &validIndex($myIndex + $dest, $parent.SubPages.Count) ) then {
+            } else if ( $this->validIndex($myIndex) && $this->validIndex($myIndex + $dest, $parent->SubPages->Count) ) then {
                 if ( $dest == - 1 ) then {
-                    &parent.SubPages.Collection[$myIndex + $dest].SelectLastExpandedItem();
+                    $parent->SubPages->Collection[$myIndex + $dest]->SelectLastExpandedItem();
                 } else {
-                    $parent.SubPages.Collection[$myIndex + $dest].IsSelected = true;
+                    $parent->SubPages->Collection[$myIndex + $dest]->IsSelected = true;
                 }
             }
             return true;
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.SelectedMove(this, $i, $dest) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->SelectedMove($this, $i, $dest) ) then {
                     return true;
                 }
             }
@@ -243,27 +275,29 @@ package TLPage;
         return false;
     }
     sub SelectLastExpandedItem {
-        if ( $IsExpanded && $SubPages.Count > 0 ) then {
-            &SubPages.Last().SelectLastExpandedItem();
+        my $this = shift;
+        if ( $this->IsExpanded && $this->SubPages->Count > 0 ) then {
+            $this->SubPages->Last()->SelectLastExpandedItem();
         } else {
-            $IsSelected = true;
+            $this->IsSelected = true;
         }
     }
     sub SelectedDownOver {
+        my $this = shift;
         my ($parent, $myIndex) = @_;
         my $dest = 1;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) && $myIndex + $dest == $parent.SubPages.Count ) then {
-                $parent.IsSelected = true;
-                &root.SelectedDownOver(null, - 1);
-            } else if ( &validIndex($myIndex) && &validIndex($myIndex + $dest, $parent.SubPages.Count) ) then {
-                $parent.SubPages.Collection[$myIndex + $dest].IsSelected = true;
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) && $myIndex + $dest == $parent->SubPages->Count ) then {
+                $parent->IsSelected = true;
+                $this->root->SelectedDownOver(null, - 1);
+            } else if ( $this->validIndex($myIndex) && $this->validIndex($myIndex + $dest, $parent->SubPages->Count) ) then {
+                $parent->SubPages->Collection[$myIndex + $dest]->IsSelected = true;
             }
             return true;
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.SelectedDownOver(this, $i) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->SelectedDownOver($this, $i) ) then {
                     return true;
                 }
             }
@@ -271,30 +305,31 @@ package TLPage;
         return false;
     }
     sub ExpandedChange {
+        my $this = shift;
         my ($parent, $myIndex, $expanded) = @_;
-        if ( $IsSelected ) then {
-            if ( !$IsExpanded ) then {
+        if ( $this->IsSelected ) then {
+            if ( !$this->IsExpanded ) then {
                 if ( !$expanded ) then {
-                    if ( &validIndex($myIndex) ) then {
-                        $parent.IsSelected = true;
+                    if ( $this->validIndex($myIndex) ) then {
+                        $parent->IsSelected = true;
                     }
                 } else {
-                    $IsExpanded = $expanded;
+                    $this->IsExpanded = $expanded;
                 }
             } else {
                 if ( !$expanded ) then {
-                    $IsExpanded = $expanded;
+                    $this->IsExpanded = $expanded;
                 } else {
-                    if ( $SubPages.Count > 0 ) then {
-                        $SubPages.Collection[0].IsSelected = true;
+                    if ( $this->SubPages->Count > 0 ) then {
+                        $this->SubPages->Collection[0]->IsSelected = true;
                     }
                 }
             }
             return true;
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.ExpandedChange(this, $i, $expanded) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->ExpandedChange($this, $i, $expanded) ) then {
                     return true;
                 }
             }
@@ -302,18 +337,19 @@ package TLPage;
         return false;
     }
     sub Create {
+        my $this = shift;
         my ($parent, $myIndex, $dest) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) ) then {
-                my $page = TLPage->new("", "", $root, $Settings);
-                &parent.SubPages.Insert($myIndex + $dest, $page);
-                $page.IsSelected = true;
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) ) then {
+                my $page = TLPage->new("", "", $this->root, $this->Settings);
+                $parent->SubPages->Insert($myIndex + $dest, $page);
+                $page->IsSelected = true;
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.Create(this, $i, $dest) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->Create($this, $i, $dest) ) then {
                     return true;
                 }
             }
@@ -321,23 +357,24 @@ package TLPage;
         return false;
     }
     sub CreateRight {
+        my $this = shift;
         my ($parent, $myIndex, $destTop) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) ) then {
-                my $page = TLPage->new("", "", $root, $Settings);
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) ) then {
+                my $page = TLPage->new("", "", $this->root, $this->Settings);
                 if ( $destTop ) then {
-                    &SubPages.Insert(0, $page);
+                    $this->SubPages->Insert(0, $page);
                 } else {
-                    &SubPages.Add($page);
+                    $this->SubPages->Add($page);
                 }
-                $IsExpanded = true;
-                $page.IsSelected = true;
+                $this->IsExpanded = true;
+                $page->IsSelected = true;
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.CreateRight(this, $i, $destTop) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->CreateRight($this, $i, $destTop) ) then {
                     return true;
                 }
             }
@@ -345,23 +382,24 @@ package TLPage;
         return false;
     }
     sub Delete {
+        my $this = shift;
         my ($parent, $myIndex) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) ) then {
-                &parent.SubPages.RemoveAt($myIndex);
-                if ( &validIndex($myIndex, $SubPages.Count) ) then {
-                    $parent.SubPages.Collection[$myIndex].IsSelected = true;
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) ) then {
+                $parent->SubPages->RemoveAt($myIndex);
+                if ( $this->validIndex($myIndex, $this->SubPages->Count) ) then {
+                    $parent->SubPages->Collection[$myIndex]->IsSelected = true;
                 } else {
-                    if ( &validIndex($myIndex - 1) ) then {
-                        $parent.SubPages.Collection[$myIndex - 1].IsSelected = true;
+                    if ( $this->validIndex($myIndex - 1) ) then {
+                        $parent->SubPages->Collection[$myIndex - 1]->IsSelected = true;
                     } else {                    }
                 }
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.Delete(this, $i) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->Delete($this, $i) ) then {
                     return true;
                 }
             }
@@ -369,26 +407,28 @@ package TLPage;
         return false;
     }
     sub Clone {
-        my $page = TLPage->new($Title, $Text, $root, $Settings);
-        for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-            my $subpage = &SubPages.Collection[$i].Clone();
-            &page.SubPages.Add($subpage);
+        my $this = shift;
+        my $page = TLPage->new($this->Title, $this->Text, $this->root, $this->Settings);
+        for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+            my $subpage = $this->SubPages->Collection[$i]->Clone();
+            $page->SubPages->Add($subpage);
         }
         return $page;
     }
     sub Duplicate {
+        my $this = shift;
         my ($parent, $myIndex, $dest) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) ) then {
-                my $page = &Clone();
-                &parent.SubPages.Insert($myIndex + $dest, $page);
-                $page.IsSelected = true;
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) ) then {
+                my $page = $this->Clone();
+                $parent->SubPages->Insert($myIndex + $dest, $page);
+                $page->IsSelected = true;
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.Duplicate(this, $i, $dest) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->Duplicate($this, $i, $dest) ) then {
                     return true;
                 }
             }
@@ -396,23 +436,24 @@ package TLPage;
         return false;
     }
     sub DuplicateRight {
+        my $this = shift;
         my ($parent, $myIndex, $destTop) = @_;
-        if ( $IsSelected ) then {
-            if ( &validIndex($myIndex) ) then {
-                my $page = &Clone();
+        if ( $this->IsSelected ) then {
+            if ( $this->validIndex($myIndex) ) then {
+                my $page = $this->Clone();
                 if ( $destTop ) then {
-                    &SubPages.Insert(0, $page);
+                    $this->SubPages->Insert(0, $page);
                 } else {
-                    &SubPages.Add($page);
+                    $this->SubPages->Add($page);
                 }
-                $IsExpanded = true;
-                $page.IsSelected = true;
+                $this->IsExpanded = true;
+                $page->IsSelected = true;
                 return true;
             }
         } else {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                if ( &subpage.DuplicateRight(this, $i, $destTop) ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                if ( $subpage->DuplicateRight($this, $i, $destTop) ) then {
                     return true;
                 }
             }
@@ -420,47 +461,51 @@ package TLPage;
         return false;
     }
     sub create_text {
+        my $this = shift;
         my ($doc, $name, $text) = @_;
-        my $element = &doc.createElement($name);
-        my $content = &doc.createTextNode($text);
-        &element.appendChild($content);
+        my $element = $doc->createElement($name);
+        my $content = $doc->createTextNode($text);
+        $element->appendChild($content);
         return $element;
     }
     sub ToXml {
+        my $this = shift;
         my ($doc) = @_;
-        my $page = &doc.createElement("page");
-        &page.appendChild(&create_text($doc, "title", $Title));
-        &page.appendChild(&create_text($doc, "text", $text));
-        my $subpages = &doc.createElement("subpages");
-        &page.appendChild($subpages);
-        for ( my $p of $SubPages.Collection ) {
-            if ( $Settings.PageLoad ) then {
-                my $subpage = &doc.createElement("page");
-                &subpage.appendChild(&create_text($doc, "title", $p.Title));
-                &subpages.appendChild($subpage);
+        my $page = $doc->createElement("page");
+        $page->appendChild($this->create_text($doc, "title", $this->Title));
+        $page->appendChild($this->create_text($doc, "text", $this->text));
+        my $subpages = $doc->createElement("subpages");
+        $page->appendChild($subpages);
+        for ( my $p of $this->SubPages->Collection ) {
+            if ( $this->Settings->PageLoad ) then {
+                my $subpage = $doc->createElement("page");
+                $subpage->appendChild($this->create_text($doc, "title", $p->Title));
+                $subpages->appendChild($subpage);
             } else {
-                &subpages.appendChild(&p.ToXml($doc));
+                $subpages->appendChild($p->ToXml($doc));
             }
         }
         return $page;
     }
     sub ToJSON {
+        my $this = shift;
         my $subpages = Array->new();
-        for ( my $p of $SubPages.Collection ) {
-            if ( $Settings.PageLoad ) then {
-                &subpages.push({my "Title" = $p.Title});
+        for ( my $p of $this->SubPages->Collection ) {
+            if ( $this->Settings->PageLoad ) then {
+                $subpages->push({my "Title" = $p->Title});
             } else {
-                &subpages.push(&p.ToJSON());
+                $subpages->push($p->ToJSON());
             }
         }
-        return {my "Title" = $Title, my "Text" = $Text, my "SubPages" = $subpages}
+        return {my "Title" = $this->Title, my "Text" = $this->Text, my "SubPages" = $subpages}
     }
     sub find_element {
+        my $this = shift;
         my ($parent, $name) = @_;
-        if ( $parent.hasChildNodes ) then {
-            for ( my $i = 0; $i < $parent.childNodes.length; $i++ ) {
-                my $child = $parent.childNodes[$i];
-                if ( $child.nodeType == $Node.ELEMENT_NODE && $child.nodeName == $name ) then {
+        if ( $parent->hasChildNodes ) then {
+            for ( my $i = 0; $i < $parent->childNodes->length; $i++ ) {
+                my $child = $parent->childNodes[$i];
+                if ( $child->nodeType == $Node->ELEMENT_NODE && $child->nodeName == $name ) then {
                     return $Element $child;
                 }
             }
@@ -468,174 +513,190 @@ package TLPage;
         return null;
     }
     sub get_text {
+        my $this = shift;
         my ($parent, $name) = @_;
-        my $element = &find_element($parent, $name);
-        return $element.textContent;
+        my $element = $this->find_element($parent, $name);
+        return $element->textContent;
     }
     sub FromXml {
+        my $this = shift;
         my ($element) = @_;
-        $Title = &get_text($element, "title");
-        my $fileelement = &find_element($element, "file");
+        $this->Title = $this->get_text($element, "title");
+        my $fileelement = $this->find_element($element, "file");
         if ( $fileelement != null ) then {
-            $loaded = false;
-            $filename = $fileelement.textContent;
+            $this->loaded = false;
+            $this->filename = $fileelement->textContent;
         } else {
-            my $subpages = &find_element($element, "subpages");
+            my $subpages = $this->find_element($element, "subpages");
             if ( $subpages != null ) then {
-                $loaded = true;
-                $filename = "";
-                $Text = &get_text($element, "text");
-                for ( my $i = 0; $i < $subpages.childNodes.length; $i++ ) {
-                    my $child = $subpages.childNodes[$i];
-                    if ( $child.nodeType == $Node.ELEMENT_NODE ) then {
-                        my $page = TLPage->new("", "", $root, $Settings);
-                        &page.FromXml($Element $child);
-                        &SubPages.Add($page);
+                $this->loaded = true;
+                $this->filename = "";
+                $this->Text = $this->get_text($element, "text");
+                for ( my $i = 0; $i < $subpages->childNodes->length; $i++ ) {
+                    my $child = $subpages->childNodes[$i];
+                    if ( $child->nodeType == $Node->ELEMENT_NODE ) then {
+                        my $page = TLPage->new("", "", $this->root, $this->Settings);
+                        $page->FromXml($Element $child);
+                        $this->SubPages->Add($page);
                     }
                 }
             } else {
-                $loaded = false;
-                $filename = "";
+                $this->loaded = false;
+                $this->filename = "";
             }
         }
     }
     sub FromJSON {
+        my $this = shift;
         my ($obj) = @_;
-        $Title = $obj["Title"];
+        $this->Title = $obj["Title"];
         my $file = $obj["File"];
         if ( $file != null ) then {
-            $loaded = false;
-            $filename = $file;
+            $this->loaded = false;
+            $this->filename = $file;
         } else {
             my $subpages = $obj["SubPages"];
             if ( $subpages != null ) then {
-                $loaded = true;
-                $filename = "";
-                $Text = $obj["Text"];
-                for ( my $i = 0; $i < $subpages.length; $i++ ) {
+                $this->loaded = true;
+                $this->filename = "";
+                $this->Text = $obj["Text"];
+                for ( my $i = 0; $i < $subpages->length; $i++ ) {
                     my $child = $subpages[$i];
-                    my $page = TLPage->new("", "", $root, $Settings);
-                    &page.FromJSON($child);
-                    &SubPages.Add($page);
+                    my $page = TLPage->new("", "", $this->root, $this->Settings);
+                    $page->FromJSON($child);
+                    $this->SubPages->Add($page);
                 }
             } else {
-                $loaded = false;
-                $filename = "";
+                $this->loaded = false;
+                $this->filename = "";
             }
         }
     }
     my $pagePath;
     sub getPagePath {
-        return $pagePath;
+        my $this = shift;
+        return $this->pagePath;
     }
     sub getPageByPath {
+        my $this = shift;
         my ($path) = @_;
-        if ( $path.length == 0 ) then {
-            return this;
+        if ( $path->length == 0 ) then {
+            return $this;
         } else {
             my $index = &Number($path[0]);
-            if ( $index >= 0 && $index < $SubPages.Count ) then {
-                return &SubPages.Collection[$index].getPageByPath(&path.slice(1));
+            if ( $index >= 0 && $index < $this->SubPages->Count ) then {
+                return $this->SubPages->Collection[$index]->getPageByPath($path->slice(1));
             }
         }
         return null;
     }
     sub getPageByPathString {
+        my $this = shift;
         my ($path) = @_;
-        return &getPageByPath(&path.split("/").slice(1));
+        return $this->getPageByPath($path->split("/")->slice(1));
     }
     sub setPath {
+        my $this = shift;
         my ($path) = @_;
-        $pagePath = $path;
-        if ( $loaded ) then {
-            for ( my $i = 0; $i < $SubPages.Count; $i++ ) {
-                my $subpage = $SubPages.Collection[$i];
-                &subpage.setPath($path + "/" + &String($i));
+        $this->pagePath = $path;
+        if ( $this->loaded ) then {
+            for ( my $i = 0; $i < $this->SubPages->Count; $i++ ) {
+                my $subpage = $this->SubPages->Collection[$i];
+                $subpage->setPath($path + "/" + &String($i));
             }
         }
     }
     sub loadPageFile {
-        if ( !$loaded ) then {
-            if ( $filename != "" ) then {
-                &Load($filename);
+        my $this = shift;
+        if ( !$this->loaded ) then {
+            if ( $this->filename != "" ) then {
+                $this->Load($this->filename);
             } else {
-                &root.setPath("0");
-                &Load("tlcom.command?name=getpage&path=" + $pagePath);
+                $this->root->setPath("0");
+                $this->Load("tlcom.command?name=getpage&path=" + $this->pagePath);
             }
-            $loaded = true;
-            $filename = "";
+            $this->loaded = true;
+            $this->filename = "";
         }
     }
     sub get_ext {
+        my $this = shift;
         my ($file) = @_;
-        my $index = &file.lastIndexOf(".");
+        my $index = $file->lastIndexOf(".");
         if ( $index >= 0 ) then {
-            return &file.substring($index + 1);
+            return $file->substring($index + 1);
         }
         return "";
     }
     sub Load {
+        my $this = shift;
         my ($path) = @_;
-        if ( &get_ext($path) == "xml" ) then {
-            &LoadXML($path);
+        if ( $this->get_ext($path) == "xml" ) then {
+            $this->LoadXML($path);
         } else {
-            &LoadJSON($path);
+            $this->LoadJSON($path);
         }
     }
     sub LoadXML {
+        my $this = shift;
         my ($path) = @_;
         my $request = XMLHttpRequest->new();
-        &request.open("GET", $path, false);
-        &request.send(null);
-        my $doc = $request.responseXML;
-        &FromXml($doc.documentElement);
+        $request->open("GET", $path, false);
+        $request->send(null);
+        my $doc = $request->responseXML;
+        $this->FromXml($doc->documentElement);
     }
     sub LoadJSON {
+        my $this = shift;
         my ($path) = @_;
         my $request = XMLHttpRequest->new();
-        &request.open("GET", $path, false);
-        &request.send(null);
-        &FromJSON(&JSON.parse($request.responseText));
+        $request->open("GET", $path, false);
+        $request->send(null);
+        $this->FromJSON($JSON->parse($request->responseText));
     }
     sub Save {
+        my $this = shift;
         my ($path) = @_;
     }
     sub StartsWith {
+        my $this = shift;
         my ($str, $header) = @_;
-        return $str.length >= $header.length && &str.substr(0, $header.length) == $header;
+        return $str->length >= $header->length && $str->substr(0, $header->length) == $header;
     }
     sub splitSections {
+        my $this = shift;
         my ($sections, $header) = @_;
         my $result = Array->new();
         my $chapter = null;
         for ( my $section of $sections ) {
-            if ( &StartsWith($section, $header) ) then {
+            if ( $this->StartsWith($section, $header) ) then {
                 if ( $chapter == null ) then {
                     $chapter = Array->new();
                 }
-                &chapter.push(&section.substring(1));
+                $chapter->push($section->substring(1));
             } else {
                 if ( $chapter != null ) then {
-                    &result.push($chapter);
+                    $result->push($chapter);
                 }
                 $chapter = Array->new();
-                &chapter.push($section);
+                $chapter->push($section);
             }
         }
         if ( $chapter != null ) then {
-            &result.push($chapter);
+            $result->push($chapter);
         }
         return $result;
     }
     sub FromText {
+        my $this = shift;
         my ($sections, $header) = @_;
-        if ( $sections.length > 0 ) then {
-            $Text = $sections[0];
-            my $sections2 = &sections.slice(1);
-            for ( my $chapter of &splitSections($sections2, $header) ) {
-                my $page = TLPage->new("", "", $root, $Settings);
-                &page.FromText($chapter, $header);
-                &SubPages.Add($page);
+        if ( $sections->length > 0 ) then {
+            $this->Text = $sections[0];
+            my $sections2 = $sections->slice(1);
+            for ( my $chapter of $this->splitSections($sections2, $header) ) {
+                my $page = TLPage->new("", "", $this->root, $this->Settings);
+                $page->FromText($chapter, $header);
+                $this->SubPages->Add($page);
             }
         }
     }
