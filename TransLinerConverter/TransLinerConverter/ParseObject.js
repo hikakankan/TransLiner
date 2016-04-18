@@ -351,6 +351,24 @@ var ParseObject = (function () {
     //private isidentifier(n: number): boolean {
     //    return this.children[n].kinde == ts.SyntaxKind.Identifier;
     //}
+    ParseObject.prototype.getHeritage = function (heritageClauses) {
+        // heritageClauses.list[0].kind = HeritageClause
+        // heritageClauses.list[0].children[0].list[0].kind = ExpressionWithTypeArguments
+        // heritageClauses.list[0].children[0].list[0].children[0].kind = Identifier
+        // ここの構造は不明のため全部連結して返す
+        var s = "";
+        for (var _i = 0, _a = heritageClauses.list; _i < _a.length; _i++) {
+            var heritageClause = _a[_i];
+            for (var _b = 0, _c = heritageClause.children[0].list; _b < _c.length; _b++) {
+                var expressionWithTypeArguments = _c[_b];
+                if (s != "") {
+                    s += " ";
+                }
+                s += expressionWithTypeArguments.children[0].text;
+            }
+        }
+        return s;
+    };
     ParseObject.prototype.toTypeScript = function (op, n) {
         if (op == "nl") {
             if (this.kinde == 0) {
@@ -752,7 +770,15 @@ var ParseObject = (function () {
                 //    visitNodes(cbNodes, (<ts.ClassLikeDeclaration>node).heritageClauses),
                 //    visitNodes(cbNodes, (<ts.ClassLikeDeclaration>node).members)]);
                 if (this.perl) {
-                    return this.format("$0 $1 package _$ $2 $3 $4 ; @5 1", this.children, n);
+                    // this.children[4].list[0].kind = HeritageClause
+                    // this.children[4].list[0].children[0].list[0].kind = ExpressionWithTypeArguments
+                    // this.children[4].list[0].children[0].list[0].children[0].kind = Identifier
+                    var head = this.format("package _$ $2 ;\r\n", this.children, n);
+                    if (this.children[4]) {
+                        var base_list = this.getHeritage(this.children[4]);
+                        head += this.indent(n) + "use base qw(" + base_list + ");\r\n" + this.indent(n);
+                    }
+                    return head + this.format("@5 1", this.children, n);
                 }
                 else {
                     return this.format("$0 $1 class $2 $3 $4 { @5 }", this.children, n);

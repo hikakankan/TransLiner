@@ -45,31 +45,23 @@ function syntaxKindToObject(syntaxKind: ts.SyntaxKind): ParseObject {
 
 import * as fs from "fs";
 
-var filename = "./TLPage.ts";
-var filename_dest = "./TLPage.pm";
+var file = "TLPage.ts"; // この用途は不明
 
-let text = fs.readFileSync(filename, "UTF-8");
+function convertFile(filename_src: string, filename_dest: string) {
+    let text = fs.readFileSync(filename_src, "UTF-8");
+    let sourceFile = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
+    let result = convertToObject(sourceFile).toTypeScript(" ", -1);
+    fs.writeFileSync(filename_dest, result, "UTF-8");
+}
 
-let sourceFile = ts.createSourceFile("TLPage.ts", text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
-//let result = convertToObject(sourceFile).print(0);
-let obj = convertToObject(sourceFile);
-obj.setParent(null);
-let result = obj.toTypeScript(" ", -1);
-
-fs.writeFileSync(filename_dest, result, "UTF-8");
-
-//let caselist = "";
-//for (var i = 0; i < ts.SyntaxKind.Count; i++) {
-//    caselist += "case ts.SyntaxKind." + ts.SyntaxKind[i] + ":\r\n";
-//    caselist += "    return this.kind;\r\n";
-//}
+convertFile("./TLPage.ts", "./TLPage.pm");
+convertFile("./TLRootPage.ts", "./TLRootPage.pm");
+convertFile("./TLPageSettings.ts", "./TLPageSettings.pm");
 
 import http = require('http');
 var port = process.env.port || 1337
 http.createServer(function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.write(result + "\r\n", "UTF-8");
+    res.write("終了\r\n", "UTF-8");
     res.end();
-    //res.end(result + "\r\n", "utf-8");
-    //res.end(caselist + "\r\n");
 }).listen(port);
