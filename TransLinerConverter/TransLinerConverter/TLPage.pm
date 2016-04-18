@@ -3,7 +3,9 @@ package TLPageCollection;
     sub new {
         my $class = shift;
         $this->Collection = Array->new();
-        my $self = {}
+        my $self = {
+            "Collection" => $Collection
+        }
         return bless $self, $class;
     }
     sub get_Count {
@@ -45,7 +47,17 @@ package TLPage;
         $this->loaded = true;
         $this->filename = "";
         $this->pagePath = "";
-        my $self = {}
+        my $self = {
+            "loaded" => $loaded, 
+            "filename" => $filename, 
+            "root" => $root, 
+            "SubPages" => $SubPages, 
+            "title" => $title, 
+            "text" => $text, 
+            "isSelected" => $isSelected, 
+            "isExpanded" => $isExpanded, 
+            "pagePath" => $pagePath
+        }
         return bless $self, $class;
     }
     my $loaded;

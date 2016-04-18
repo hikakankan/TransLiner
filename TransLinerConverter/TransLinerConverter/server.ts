@@ -13,16 +13,30 @@ function convertToObject(node: ts.Node): ParseObject {
     }
 }
 
+function setParent(pobj: ParseObject, list: ParseObject[]): void {
+    if (list) {
+        for (var obj of list) {
+            if (obj) {
+                obj.setParent(pobj);
+            }
+        }
+    }
+}
+
 function convertNodesToObject(nodes: ts.Node[]): ParseObject {
     var list = new Array();
     for (var node of nodes) {
         list.push(convertToObject(node));
     }
-    return new ParseObject(null, null, list, null);
+    var pobj = new ParseObject(null, null, list, null);
+    setParent(pobj, list);
+    return pobj;
 }
 
 function collectChildren(children: ParseObject[]): ParseObject {
-    return new ParseObject(null, children, null, null);
+    var pobj = new ParseObject(null, children, null, null);
+    setParent(pobj, children);
+    return pobj;
 }
 
 function syntaxKindToObject(syntaxKind: ts.SyntaxKind): ParseObject {
@@ -38,7 +52,9 @@ let text = fs.readFileSync(filename, "UTF-8");
 
 let sourceFile = ts.createSourceFile("TLPage.ts", text, ts.ScriptTarget.Latest, /*setParentPointers*/ true);
 //let result = convertToObject(sourceFile).print(0);
-let result = convertToObject(sourceFile).toTypeScript(" ", -1);
+let obj = convertToObject(sourceFile);
+obj.setParent(null);
+let result = obj.toTypeScript(" ", -1);
 
 fs.writeFileSync(filename_dest, result, "UTF-8");
 

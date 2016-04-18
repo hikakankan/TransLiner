@@ -29,11 +29,11 @@ class ParseObject {
             this.prop = false;
         }
     }
-    private clike;
-    private typed;
-    private thisneed;
-    private perl;
-    private prop;
+    private clike: boolean;
+    private typed: boolean;
+    private thisneed: boolean;
+    private perl: boolean;
+    private prop: boolean;
     public kinde: ts.SyntaxKind = 0;
     public kind: string = "";
     public text: string = "";
@@ -65,13 +65,19 @@ class ParseObject {
         }
         return s;
     }
+    private parent: ParseObject;
+    public getParent(): ParseObject {
+        return this.parent;
+    }
+    public setParent(parent: ParseObject): void {
+        this.parent = parent;
+    }
     private indent(n: number) {
         var s: string = "";
         for (var i = 0; i < n; i++) {
             s += "    ";
         }
         return s;
-        //return "[" + String(n) + "]" + s;
     }
     private concop(list: ParseObject[], op: string, n: number): string {
         var s = "";
@@ -106,7 +112,9 @@ class ParseObject {
         }
         return s;
     }
-    private proplist(list: ParseObject[]): string[] {
+    public proplist(): string[] {
+        //var list: ParseObject[] = this.list;
+        var list: ParseObject[] = this.children[5].list;
         var props = new Array<string>();
         if (list != null) {
             for (var obj of list) {
@@ -115,7 +123,7 @@ class ParseObject {
                         case ts.SyntaxKind.PropertyDeclaration:
                         case ts.SyntaxKind.PropertySignature:
                         case ts.SyntaxKind.PropertyAssignment:
-                            var name = obj.children[2];
+                            var name = obj.children[4];
                             if (name.kinde == ts.SyntaxKind.Identifier) {
                                 props.push(name.text);
                             }
@@ -124,6 +132,16 @@ class ParseObject {
             }
         }
         return props;
+    }
+    private propmap(proplist: string[], n: number): string {
+        var s = "";
+        for (var prop of proplist) {
+            if (s != "") {
+                s += ", ";
+            }
+            s += "\r\n" + this.indent(n + 2) + "\"" + prop + "\" => $" + prop;
+        }
+        return s;
     }
     private concat(s1: string, op: string, s2: string): string {
         if (s1 != "" && s2 != "") {
@@ -264,8 +282,8 @@ class ParseObject {
         if (prms != "") {
             prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
         }
-        var accessor = "my $self = {";
-        accessor += "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
+        var plist = this.getParent().getParent().proplist();
+        var accessor = "my $self = {" + this.propmap(plist, n) + "\r\n" + this.indent(n + 1) + "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
         return this.format_block(block_n, this.children, n, prmline, accessor);
     }
     private escapestring(s: string) {

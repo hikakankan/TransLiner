@@ -66,13 +66,18 @@ var ParseObject = (function () {
         }
         return s;
     };
+    ParseObject.prototype.getParent = function () {
+        return this.parent;
+    };
+    ParseObject.prototype.setParent = function (parent) {
+        this.parent = parent;
+    };
     ParseObject.prototype.indent = function (n) {
         var s = "";
         for (var i = 0; i < n; i++) {
             s += "    ";
         }
         return s;
-        //return "[" + String(n) + "]" + s;
     };
     ParseObject.prototype.concop = function (list, op, n) {
         var s = "";
@@ -110,7 +115,9 @@ var ParseObject = (function () {
         }
         return s;
     };
-    ParseObject.prototype.proplist = function (list) {
+    ParseObject.prototype.proplist = function () {
+        //var list: ParseObject[] = this.list;
+        var list = this.children[5].list;
         var props = new Array();
         if (list != null) {
             for (var _i = 0, list_3 = list; _i < list_3.length; _i++) {
@@ -120,7 +127,7 @@ var ParseObject = (function () {
                         case ts.SyntaxKind.PropertyDeclaration:
                         case ts.SyntaxKind.PropertySignature:
                         case ts.SyntaxKind.PropertyAssignment:
-                            var name = obj.children[2];
+                            var name = obj.children[4];
                             if (name.kinde == ts.SyntaxKind.Identifier) {
                                 props.push(name.text);
                             }
@@ -129,6 +136,17 @@ var ParseObject = (function () {
             }
         }
         return props;
+    };
+    ParseObject.prototype.propmap = function (proplist, n) {
+        var s = "";
+        for (var _i = 0, proplist_1 = proplist; _i < proplist_1.length; _i++) {
+            var prop = proplist_1[_i];
+            if (s != "") {
+                s += ", ";
+            }
+            s += "\r\n" + this.indent(n + 2) + "\"" + prop + "\" => $" + prop;
+        }
+        return s;
     };
     ParseObject.prototype.concat = function (s1, op, s2) {
         if (s1 != "" && s2 != "") {
@@ -285,8 +303,8 @@ var ParseObject = (function () {
         if (prms != "") {
             prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
         }
-        var accessor = "my $self = {";
-        accessor += "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
+        var plist = this.getParent().getParent().proplist();
+        var accessor = "my $self = {" + this.propmap(plist, n) + "\r\n" + this.indent(n + 1) + "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
         return this.format_block(block_n, this.children, n, prmline, accessor);
     };
     ParseObject.prototype.escapestring = function (s) {
