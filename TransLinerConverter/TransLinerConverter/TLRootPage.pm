@@ -3,302 +3,302 @@ use base qw(TLPage);
     sub new {
         my $class = shift;
         my ($title, $text, $settings) = @_;
-        super($title, $text, null, $settings);
-        $this->root = $this;
         my $self = {
             "serverSide" => $serverSide
-        }
+        };
+        super($title, $text, null, $settings);
+        $self->{root} = $self;
         return bless $self, $class;
     }
     sub get_SelectedPage {
-        my $this = shift;
-        return $this->SelectedPage_;
+        my $self = shift;
+        return $self->{SelectedPage_};
     }
     sub set_SelectedPage {
-        my $this = shift;
+        my $self = shift;
         my ($page) = @_;
-        $this->UnselectAll();
-        $page->IsSelected = true;
+        $self->UnselectAll();
+        $page->{IsSelected} = true;
     }
     sub get_SelectedText {
-        my $this = shift;
-        my $selectedPage = $this->SelectedPage;
-        if ( $selectedPage != null ) then {
-            return $selectedPage->Text;
+        my $self = shift;
+        my $selectedPage = $self->{SelectedPage};
+        if ( $selectedPage != null ) {
+            return $selectedPage->{Text};
         }
         return "";
     }
     sub set_SelectedText {
-        my $this = shift;
+        my $self = shift;
         my ($value) = @_;
-        my $selectedPage = $this->SelectedPage;
-        if ( $selectedPage != null ) then {
-            $selectedPage->Text = $value;
+        my $selectedPage = $self->{SelectedPage};
+        if ( $selectedPage != null ) {
+            $selectedPage->{Text} = $value;
         }
     }
     my $serverSide = false;
     sub execCommand {
-        my $this = shift;
+        my $self = shift;
         my ($command, $actual_proc) = @_;
-        if ( $this->Settings->NoServer || $this->serverSide ) then {
+        if ( $self->{Settings}->{NoServer} || $self->{serverSide} ) {
             return &actual_proc();
         } else {
-            $this->setPath("0");
-            my $path = $this->SelectedPage->getPagePath();
+            $self->setPath("0");
+            my $path = $self->{SelectedPage}->getPagePath();
             my $request = XMLHttpRequest->new();
             $request->open("GET", "tlcom.command?name=" + $command + "&path=" + $path, false);
             $request->send(null);
-            return $request->responseText == "true" && &actual_proc();
+            return $request->{responseText} == "true" && &actual_proc();
         }
     }
     sub receiveCommand {
-        my $this = shift;
+        my $self = shift;
         my ($command) = @_;
-        if ( $command == "MoveLeftUp" ) then {
-            return $this->MoveLeftUp_();
-        } else if ( $command == "MoveLeftDown" ) then {
-            return $this->MoveLeftDown_();
-        } else if ( $command == "MoveUpRightTop" ) then {
-            return $this->MoveUpRightTop_();
-        } else if ( $command == "MoveUpRightBottom" ) then {
-            return $this->MoveUpRightBottom_();
-        } else if ( $command == "MoveDownRightTop" ) then {
-            return $this->MoveDownRightTop_();
-        } else if ( $command == "MoveDownRightBottom" ) then {
-            return $this->MoveDownRightBottom_();
-        } else if ( $command == "MoveUp" ) then {
-            return $this->MoveUp_();
-        } else if ( $command == "MoveDown" ) then {
-            return $this->MoveDown_();
-        } else if ( $command == "CreateUp" ) then {
-            return $this->CreateUp_();
-        } else if ( $command == "CreateDown" ) then {
-            return $this->CreateDown_();
-        } else if ( $command == "CreateRightTop" ) then {
-            return $this->CreateRightTop_();
-        } else if ( $command == "CreateRightBottom" ) then {
-            return $this->CreateRightBottom_();
-        } else if ( $command == "DuplicateUp" ) then {
-            return $this->DuplicateUp_();
-        } else if ( $command == "DuplicateDown" ) then {
-            return $this->DuplicateDown_();
-        } else if ( $command == "DuplicateRightTop" ) then {
-            return $this->DuplicateRightTop_();
-        } else if ( $command == "DuplicateRightBottom" ) then {
-            return $this->DuplicateRightBottom_();
-        } else if ( $command == "DeleteSelectedItem" ) then {
-            return $this->DeleteSelectedItem_();
-        } else if ( $command == "Expand" ) then {
-            return $this->Expand_();
-        } else if ( $command == "Unexpand" ) then {
-            return $this->Unexpand_();
+        if ( $command == "MoveLeftUp" ) {
+            return $self->MoveLeftUp_();
+        } elsif ( $command == "MoveLeftDown" ) {
+            return $self->MoveLeftDown_();
+        } elsif ( $command == "MoveUpRightTop" ) {
+            return $self->MoveUpRightTop_();
+        } elsif ( $command == "MoveUpRightBottom" ) {
+            return $self->MoveUpRightBottom_();
+        } elsif ( $command == "MoveDownRightTop" ) {
+            return $self->MoveDownRightTop_();
+        } elsif ( $command == "MoveDownRightBottom" ) {
+            return $self->MoveDownRightBottom_();
+        } elsif ( $command == "MoveUp" ) {
+            return $self->MoveUp_();
+        } elsif ( $command == "MoveDown" ) {
+            return $self->MoveDown_();
+        } elsif ( $command == "CreateUp" ) {
+            return $self->CreateUp_();
+        } elsif ( $command == "CreateDown" ) {
+            return $self->CreateDown_();
+        } elsif ( $command == "CreateRightTop" ) {
+            return $self->CreateRightTop_();
+        } elsif ( $command == "CreateRightBottom" ) {
+            return $self->CreateRightBottom_();
+        } elsif ( $command == "DuplicateUp" ) {
+            return $self->DuplicateUp_();
+        } elsif ( $command == "DuplicateDown" ) {
+            return $self->DuplicateDown_();
+        } elsif ( $command == "DuplicateRightTop" ) {
+            return $self->DuplicateRightTop_();
+        } elsif ( $command == "DuplicateRightBottom" ) {
+            return $self->DuplicateRightBottom_();
+        } elsif ( $command == "DeleteSelectedItem" ) {
+            return $self->DeleteSelectedItem_();
+        } elsif ( $command == "Expand" ) {
+            return $self->Expand_();
+        } elsif ( $command == "Unexpand" ) {
+            return $self->Unexpand_();
         }
         return false;
     }
     sub MoveLeftUp_ {
-        my $this = shift;
-        return $this->MoveLeft(null, - 1, null, - 1, 0);
+        my $self = shift;
+        return $self->MoveLeft(null, - 1, null, - 1, 0);
     }
     sub MoveLeftUp {
-        my $this = shift;
-        return $this->execCommand("MoveLeftUp", () => $this->MoveLeftUp_());
+        my $self = shift;
+        return $self->execCommand("MoveLeftUp", () => $self->MoveLeftUp_());
     }
     sub MoveLeftDown_ {
-        my $this = shift;
-        return $this->MoveLeft(null, - 1, null, - 1, 1);
+        my $self = shift;
+        return $self->MoveLeft(null, - 1, null, - 1, 1);
     }
     sub MoveLeftDown {
-        my $this = shift;
-        return $this->execCommand("MoveLeftDown", () => $this->MoveLeftDown_());
+        my $self = shift;
+        return $self->execCommand("MoveLeftDown", () => $self->MoveLeftDown_());
     }
     sub MoveUpRightTop_ {
-        my $this = shift;
-        return $this->MoveRight(null, - 1, - 1, - 1, true);
+        my $self = shift;
+        return $self->MoveRight(null, - 1, - 1, - 1, true);
     }
     sub MoveUpRightTop {
-        my $this = shift;
-        return $this->execCommand("MoveUpRightTop", () => $this->MoveUpRightTop_());
+        my $self = shift;
+        return $self->execCommand("MoveUpRightTop", () => $self->MoveUpRightTop_());
     }
     sub MoveUpRightBottom_ {
-        my $this = shift;
-        return $this->MoveRight(null, - 1, - 1, - 1, false);
+        my $self = shift;
+        return $self->MoveRight(null, - 1, - 1, - 1, false);
     }
     sub MoveUpRightBottom {
-        my $this = shift;
-        return $this->execCommand("MoveUpRightBottom", () => $this->MoveUpRightBottom_());
+        my $self = shift;
+        return $self->execCommand("MoveUpRightBottom", () => $self->MoveUpRightBottom_());
     }
     sub MoveDownRightTop_ {
-        my $this = shift;
-        return $this->MoveRight(null, - 1, 1, 0, true);
+        my $self = shift;
+        return $self->MoveRight(null, - 1, 1, 0, true);
     }
     sub MoveDownRightTop {
-        my $this = shift;
-        return $this->execCommand("MoveDownRightTop", () => $this->MoveDownRightTop_());
+        my $self = shift;
+        return $self->execCommand("MoveDownRightTop", () => $self->MoveDownRightTop_());
     }
     sub MoveDownRightBottom_ {
-        my $this = shift;
-        return $this->MoveRight(null, - 1, 1, 0, false);
+        my $self = shift;
+        return $self->MoveRight(null, - 1, 1, 0, false);
     }
     sub MoveDownRightBottom {
-        my $this = shift;
-        return $this->execCommand("MoveDownRightBottom", () => $this->MoveDownRightBottom_());
+        my $self = shift;
+        return $self->execCommand("MoveDownRightBottom", () => $self->MoveDownRightBottom_());
     }
     sub MoveUp_ {
-        my $this = shift;
-        return $this->Move(null, - 1, - 1) || $this->MoveLeftUp_();
+        my $self = shift;
+        return $self->Move(null, - 1, - 1) || $self->MoveLeftUp_();
     }
     sub MoveUp {
-        my $this = shift;
-        return $this->execCommand("MoveUp", () => $this->MoveUp_());
+        my $self = shift;
+        return $self->execCommand("MoveUp", () => $self->MoveUp_());
     }
     sub MoveDown_ {
-        my $this = shift;
-        return $this->Move(null, - 1, 1) || $this->MoveLeftDown_();
+        my $self = shift;
+        return $self->Move(null, - 1, 1) || $self->MoveLeftDown_();
     }
     sub MoveDown {
-        my $this = shift;
-        return $this->execCommand("MoveDown", () => $this->MoveDown_());
+        my $self = shift;
+        return $self->execCommand("MoveDown", () => $self->MoveDown_());
     }
     sub CreateUp_ {
-        my $this = shift;
-        return $this->Create(null, - 1, 0);
+        my $self = shift;
+        return $self->Create(null, - 1, 0);
     }
     sub CreateUp {
-        my $this = shift;
-        return $this->execCommand("CreateUp", () => $this->CreateUp_());
+        my $self = shift;
+        return $self->execCommand("CreateUp", () => $self->CreateUp_());
     }
     sub CreateDown_ {
-        my $this = shift;
-        return $this->Create(null, - 1, 1);
+        my $self = shift;
+        return $self->Create(null, - 1, 1);
     }
     sub CreateDown {
-        my $this = shift;
-        return $this->execCommand("CreateDown", () => $this->CreateDown_());
+        my $self = shift;
+        return $self->execCommand("CreateDown", () => $self->CreateDown_());
     }
     sub CreateRightTop_ {
-        my $this = shift;
-        return $this->CreateRight(null, - 1, true);
+        my $self = shift;
+        return $self->CreateRight(null, - 1, true);
     }
     sub CreateRightTop {
-        my $this = shift;
-        return $this->execCommand("CreateRightTop", () => $this->CreateRightTop_());
+        my $self = shift;
+        return $self->execCommand("CreateRightTop", () => $self->CreateRightTop_());
     }
     sub CreateRightBottom_ {
-        my $this = shift;
-        return $this->CreateRight(null, - 1, false);
+        my $self = shift;
+        return $self->CreateRight(null, - 1, false);
     }
     sub CreateRightBottom {
-        my $this = shift;
-        return $this->execCommand("CreateRightBottom", () => $this->CreateRightBottom_());
+        my $self = shift;
+        return $self->execCommand("CreateRightBottom", () => $self->CreateRightBottom_());
     }
     sub DuplicateUp_ {
-        my $this = shift;
-        return $this->Duplicate(null, - 1, 0);
+        my $self = shift;
+        return $self->Duplicate(null, - 1, 0);
     }
     sub DuplicateUp {
-        my $this = shift;
-        return $this->execCommand("DuplicateUp", () => $this->DuplicateUp_());
+        my $self = shift;
+        return $self->execCommand("DuplicateUp", () => $self->DuplicateUp_());
     }
     sub DuplicateDown_ {
-        my $this = shift;
-        return $this->Duplicate(null, - 1, 1);
+        my $self = shift;
+        return $self->Duplicate(null, - 1, 1);
     }
     sub DuplicateDown {
-        my $this = shift;
-        return $this->execCommand("DuplicateDown", () => $this->DuplicateDown_());
+        my $self = shift;
+        return $self->execCommand("DuplicateDown", () => $self->DuplicateDown_());
     }
     sub DuplicateRightTop_ {
-        my $this = shift;
-        return $this->DuplicateRight(null, - 1, true);
+        my $self = shift;
+        return $self->DuplicateRight(null, - 1, true);
     }
     sub DuplicateRightTop {
-        my $this = shift;
-        return $this->execCommand("DuplicateRightTop", () => $this->DuplicateRightTop_());
+        my $self = shift;
+        return $self->execCommand("DuplicateRightTop", () => $self->DuplicateRightTop_());
     }
     sub DuplicateRightBottom_ {
-        my $this = shift;
-        return $this->DuplicateRight(null, - 1, false);
+        my $self = shift;
+        return $self->DuplicateRight(null, - 1, false);
     }
     sub DuplicateRightBottom {
-        my $this = shift;
-        return $this->execCommand("DuplicateRightBottom", () => $this->DuplicateRightBottom_());
+        my $self = shift;
+        return $self->execCommand("DuplicateRightBottom", () => $self->DuplicateRightBottom_());
     }
     sub DeleteSelectedItem_ {
-        my $this = shift;
-        return $this->Delete(null, - 1);
+        my $self = shift;
+        return $self->Delete(null, - 1);
     }
     sub DeleteSelectedItem {
-        my $this = shift;
-        return $this->execCommand("DeleteSelectedItem", () => $this->DeleteSelectedItem_());
+        my $self = shift;
+        return $self->execCommand("DeleteSelectedItem", () => $self->DeleteSelectedItem_());
     }
     sub SelectedUp {
-        my $this = shift;
-        return $this->SelectedMove(null, - 1, - 1);
+        my $self = shift;
+        return $self->SelectedMove(null, - 1, - 1);
     }
     sub SelectedDown {
-        my $this = shift;
-        return $this->SelectedMove(null, - 1, 1);
+        my $self = shift;
+        return $self->SelectedMove(null, - 1, 1);
     }
     sub Expand_ {
-        my $this = shift;
-        return $this->ExpandedChange(null, - 1, true);
+        my $self = shift;
+        return $self->ExpandedChange(null, - 1, true);
     }
     sub Expand {
-        my $this = shift;
-        return $this->Expand_();
+        my $self = shift;
+        return $self->Expand_();
     }
     sub Unexpand_ {
-        my $this = shift;
-        return $this->ExpandedChange(null, - 1, false);
+        my $self = shift;
+        return $self->ExpandedChange(null, - 1, false);
     }
     sub Unexpand {
-        my $this = shift;
-        return $this->Unexpand_();
+        my $self = shift;
+        return $self->Unexpand_();
     }
     sub loadXML {
-        my $this = shift;
+        my $self = shift;
         my ($xml) = @_;
-        $this->IsExpanded = false;
-        $this->SubPages->Clear();
-        $this->FromXml($xml);
+        $self->{IsExpanded} = false;
+        $self->{SubPages}->Clear();
+        $self->FromXml($xml);
     }
     sub loadJSON {
-        my $this = shift;
+        my $self = shift;
         my ($obj) = @_;
-        $this->IsExpanded = false;
-        $this->SubPages->Clear();
-        $this->FromJSON($obj);
+        $self->{IsExpanded} = false;
+        $self->{SubPages}->Clear();
+        $self->FromJSON($obj);
     }
     sub loadText {
-        my $this = shift;
+        my $self = shift;
         my ($text, $path) = @_;
-        $this->IsExpanded = false;
-        $this->SubPages->Clear();
-        $this->FromText2($text, ".", $path);
+        $self->{IsExpanded} = false;
+        $self->{SubPages}->Clear();
+        $self->FromText2($text, ".", $path);
     }
     sub GetFileNameWithoutExtension {
-        my $this = shift;
+        my $self = shift;
         my ($path) = @_;
         my $index_sep = $path->lastIndexOf("\\");
-        if ( $index_sep >= 0 ) then {
+        if ( $index_sep >= 0 ) {
             $path = $path->substring($index_sep + 1);
         }
         my $index_ext = $path->lastIndexOf(".");
-        if ( $index_ext >= 0 ) then {
+        if ( $index_ext >= 0 ) {
             $path = $path->substring(0, $index_ext);
         }
         return $path;
     }
     sub makeSections {
-        my $this = shift;
+        my $self = shift;
         my ($text, $header, $path) = @_;
         my $result = Array->new();
         my $sections = $text->split("\r\n" + $header);
         my $first = true;
-        for ( my $section of $sections ) {
-            if ( $first && $section->length > 0 ) then {
-                if ( $this->StartsWith($section, $header) ) then {
-                    $result->push($this->GetFileNameWithoutExtension($path));
+        foreach my $section ( $sections ) {
+            if ( $first && $section->{length} > 0 ) {
+                if ( $self->StartsWith($section, $header) ) {
+                    $result->push($self->GetFileNameWithoutExtension($path));
                     $result->push($section->substring(1));
                 } else {
                     $result->push($section);
@@ -311,8 +311,8 @@ use base qw(TLPage);
         return $result;
     }
     sub FromText2 {
-        my $this = shift;
+        my $self = shift;
         my ($text, $header, $path) = @_;
-        $this->FromText($this->makeSections($text, $header, $path), $header);
+        $self->FromText($self->makeSections($text, $header, $path), $header);
     }
 1;

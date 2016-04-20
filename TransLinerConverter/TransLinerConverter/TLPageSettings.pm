@@ -4,8 +4,8 @@ package TLPageSettings;
     my $PageLoad = false;
     my $NoServer = false;
     sub SetNoServerMode {
-        my $this = shift;
-        $this->PageLoad = false;
-        $this->NoServer = true;
+        my $self = shift;
+        $self->{PageLoad} = false;
+        $self->{NoServer} = true;
     }
 1;

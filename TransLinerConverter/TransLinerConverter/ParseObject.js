@@ -7,6 +7,7 @@ var ParseObject = (function () {
         this.kinde = 0;
         this.kind = "";
         this.text = "";
+        this.parent = null;
         if (node != null) {
             this.kinde = node.kind;
             this.kind = ts.SyntaxKind[node.kind];
@@ -36,6 +37,25 @@ var ParseObject = (function () {
             this.prop = false;
         }
     }
+    ParseObject.prototype.getParent = function () {
+        return this.parent;
+    };
+    ParseObject.prototype.setParent = function (parent) {
+        this.parent = parent;
+    };
+    //public is_method_call(): boolean {
+    //    // perl でメソッドの呼び出しかどうかを調べる
+    //    var p: ParseObject = this.getParent();
+    //    if (p == null) {
+    //        return false;
+    //    } else if (p.kinde == ts.SyntaxKind.CallExpression) {
+    //        return true;
+    //    } else if (p.kinde == ts.SyntaxKind.PropertyAccessExpression) {
+    //        return p.is_method_call();
+    //    } else {
+    //        return false;
+    //    }
+    //}
     ParseObject.prototype.print = function (n) {
         var sh = this.indent(n);
         var s = "";
@@ -65,12 +85,6 @@ var ParseObject = (function () {
             }
         }
         return s;
-    };
-    ParseObject.prototype.getParent = function () {
-        return this.parent;
-    };
-    ParseObject.prototype.setParent = function (parent) {
-        this.parent = parent;
     };
     ParseObject.prototype.indent = function (n) {
         var s = "";
@@ -104,7 +118,12 @@ var ParseObject = (function () {
                     var line = obj.toTypeScript(" ", n);
                     if (line != "") {
                         if (line[line.length - 1] == "}") {
-                            s += this.indent(n) + line + "\r\n";
+                            if (line.length > 1 && line[line.length - 2] == " ") {
+                                s += this.indent(n) + line + "\r\n";
+                            }
+                            else {
+                                s += this.indent(n) + line + ";\r\n";
+                            }
                         }
                         else {
                             s += this.indent(n) + line + ";\r\n";
@@ -291,7 +310,8 @@ var ParseObject = (function () {
     };
     ParseObject.prototype.format_prms_block = function (prm_n, block_n, list, n) {
         var prms = this.format("," + String(prm_n), this.children, n);
-        var prmline = "my $this = shift;";
+        //var prmline = "my $this = shift;";
+        var prmline = "my $self = shift;";
         if (prms != "") {
             prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
         }
@@ -304,8 +324,9 @@ var ParseObject = (function () {
             prmline += "\r\n" + this.indent(n + 1) + "my (" + prms + ") = @_;";
         }
         var plist = this.getParent().getParent().proplist();
-        var accessor = "my $self = {" + this.propmap(plist, n) + "\r\n" + this.indent(n + 1) + "}\r\n" + this.indent(n + 1) + "return bless $self, $class;";
-        return this.format_block(block_n, this.children, n, prmline, accessor);
+        var accessor = "my $self = {" + this.propmap(plist, n) + "\r\n" + this.indent(n + 1) + "};";
+        var end_constructor = "return bless $self, $class;";
+        return this.format_block(block_n, this.children, n, prmline + "\r\n" + this.indent(n + 1) + accessor, end_constructor);
     };
     ParseObject.prototype.escapestring = function (s) {
         var res = "";
@@ -424,8 +445,15 @@ var ParseObject = (function () {
             case ts.SyntaxKind.PropertySignature:
             case ts.SyntaxKind.PropertyAssignment:
                 if (this.perl) {
-                    var init_opt = this.opt(" = $", 7, true);
-                    return this.format("my $2 $3 $4 $5" + init_opt, this.children, n);
+                    if (this.getParent() && this.getParent().getParent() && this.getParent().getParent().kinde == ts.SyntaxKind.ObjectLiteralExpression) {
+                        // Object Literal
+                        var init_opt = this.opt(" => $", 7, true);
+                        return this.format("$4" + init_opt, this.children, n);
+                    }
+                    else {
+                        var init_opt = this.opt(" = $", 7, true);
+                        return this.format("my $2 $3 $4 $5" + init_opt, this.children, n);
+                    }
                 }
                 else {
                     var type_opt = this.opt(" : $", 6, this.typed);
@@ -571,7 +599,15 @@ var ParseObject = (function () {
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).dotToken),
                 //    visitNode(cbNode, (<ts.PropertyAccessExpression>node).name)]);
                 if (this.perl) {
-                    return this.format("$0 -> _$ $2", this.children, n);
+                    // 後に ( が続く場合 expression -> name
+                    // それ以外の場合    expression -> {name}
+                    // 行の終わりが } になっているときは後に; が必要(この処理は conclist で行う)
+                    if (this.parent && this.parent.kinde == ts.SyntaxKind.CallExpression) {
+                        return this.format("$0 -> _$ $2", this.children, n);
+                    }
+                    else {
+                        return this.format("$0 -> { _$ $2 }", this.children, n);
+                    }
                 }
                 else {
                     return this.format("$0 $1 _$ $2", this.children, n);
@@ -609,7 +645,12 @@ var ParseObject = (function () {
             case ts.SyntaxKind.TypeAssertionExpression:
                 //return col([visitNode(cbNode, (<ts.TypeAssertion>node).type),
                 //    visitNode(cbNode, (<ts.TypeAssertion>node).expression)]);
-                return this.conc(this.children, n);
+                if (!this.typed) {
+                    return this.format("$1", this.children, n);
+                }
+                else {
+                    return this.format("< $0 > $1", this.children, n);
+                }
             case ts.SyntaxKind.ParenthesizedExpression:
                 //return col([visitNode(cbNode, (<ts.ParenthesizedExpression>node).expression)]);
                 return this.conc(this.children, n);
@@ -682,10 +723,21 @@ var ParseObject = (function () {
                 //    visitNode(cbNode, (<ts.IfStatement>node).thenStatement),
                 //    visitNode(cbNode, (<ts.IfStatement>node).elseStatement)]);
                 if (this.children[2]) {
-                    return this.format("if _(_ $0 _)_ then $1 else $2", this.children, n);
+                    if (this.perl) {
+                        if (this.children[2].kinde == ts.SyntaxKind.IfStatement) {
+                            // perl では elsif にする
+                            return this.format("if _(_ $0 _)_ $1 els", this.children, n) + this.children[2].toTypeScript(" ", n);
+                        }
+                        else {
+                            return this.format("if _(_ $0 _)_ $1 else $2", this.children, n);
+                        }
+                    }
+                    else {
+                        return this.format("if _(_ $0 _)_ $1 else $2", this.children, n);
+                    }
                 }
                 else {
-                    return this.format("if _(_ $0 _)_ then $1", this.children, n);
+                    return this.format("if _(_ $0 _)_ $1", this.children, n);
                 }
             case ts.SyntaxKind.DoStatement:
                 //return col([visitNode(cbNode, (<ts.DoStatement>node).statement),
@@ -705,12 +757,22 @@ var ParseObject = (function () {
                 //return col([visitNode(cbNode, (<ts.ForInStatement>node).initializer),
                 //    visitNode(cbNode, (<ts.ForInStatement>node).expression),
                 //    visitNode(cbNode, (<ts.ForInStatement>node).statement)]);
-                return this.format("for _(_ $0 in $1 _)_ $2", this.children, n);
+                if (this.perl) {
+                    return this.format("foreach $0 _(_ keys( $1 ) _)_ $2", this.children, n);
+                }
+                else {
+                    return this.format("for _(_ $0 in $1 _)_ $2", this.children, n);
+                }
             case ts.SyntaxKind.ForOfStatement:
                 //return col([visitNode(cbNode, (<ts.ForOfStatement>node).initializer),
                 //    visitNode(cbNode, (<ts.ForOfStatement>node).expression),
                 //    visitNode(cbNode, (<ts.ForOfStatement>node).statement)]);
-                return this.format("for _(_ $0 of $1 _)_ $2", this.children, n);
+                if (this.perl) {
+                    return this.format("foreach $0 _(_ $1 _)_ $2", this.children, n);
+                }
+                else {
+                    return this.format("for _(_ $0 of $1 _)_ $2", this.children, n);
+                }
             case ts.SyntaxKind.ContinueStatement:
                 return "continue";
             case ts.SyntaxKind.BreakStatement:
@@ -1166,7 +1228,8 @@ var ParseObject = (function () {
                 return "switch";
             case ts.SyntaxKind.ThisKeyword:
                 if (this.perl && this.thisneed) {
-                    return "$this";
+                    //return "$this";
+                    return "$self";
                 }
                 else {
                     return "this";
@@ -1309,220 +1372,220 @@ var ParseObject = (function () {
                 return this.kind;
             case ts.SyntaxKind.BindingElement:
                 return this.kind;
-            case ts.SyntaxKind.ArrayLiteralExpression:
-                return this.kind;
-            case ts.SyntaxKind.ObjectLiteralExpression:
-                return this.kind;
-            case ts.SyntaxKind.PropertyAccessExpression:
-                return this.kind;
-            case ts.SyntaxKind.ElementAccessExpression:
-                return this.kind;
-            case ts.SyntaxKind.CallExpression:
-                return this.kind;
-            case ts.SyntaxKind.NewExpression:
-                return this.kind;
-            case ts.SyntaxKind.TaggedTemplateExpression:
-                return this.kind;
-            case ts.SyntaxKind.TypeAssertionExpression:
-                return this.kind;
-            case ts.SyntaxKind.ParenthesizedExpression:
-                return this.kind;
-            case ts.SyntaxKind.FunctionExpression:
-                return this.kind;
-            case ts.SyntaxKind.ArrowFunction:
-                return this.kind;
-            case ts.SyntaxKind.DeleteExpression:
-                return this.kind;
-            case ts.SyntaxKind.TypeOfExpression:
-                return this.kind;
-            case ts.SyntaxKind.VoidExpression:
-                return this.kind;
-            case ts.SyntaxKind.AwaitExpression:
-                return this.kind;
-            case ts.SyntaxKind.PrefixUnaryExpression:
-                return this.kind;
-            case ts.SyntaxKind.PostfixUnaryExpression:
-                return this.kind;
-            case ts.SyntaxKind.BinaryExpression:
-                return this.kind;
-            case ts.SyntaxKind.ConditionalExpression:
-                return this.kind;
-            case ts.SyntaxKind.TemplateExpression:
-                return this.kind;
-            case ts.SyntaxKind.YieldExpression:
-                return this.kind;
-            case ts.SyntaxKind.SpreadElementExpression:
-                return this.kind;
-            case ts.SyntaxKind.ClassExpression:
-                return this.kind;
+            //case ts.SyntaxKind.ArrayLiteralExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.ObjectLiteralExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.PropertyAccessExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.ElementAccessExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.CallExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.NewExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.TaggedTemplateExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.TypeAssertionExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.ParenthesizedExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.FunctionExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.ArrowFunction:
+            //    return this.kind;
+            //case ts.SyntaxKind.DeleteExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.TypeOfExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.VoidExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.AwaitExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.PrefixUnaryExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.PostfixUnaryExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.BinaryExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.ConditionalExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.TemplateExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.YieldExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.SpreadElementExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.ClassExpression:
+            //    return this.kind;
             case ts.SyntaxKind.OmittedExpression:
                 return this.kind;
-            case ts.SyntaxKind.ExpressionWithTypeArguments:
-                return this.kind;
-            case ts.SyntaxKind.AsExpression:
-                return this.kind;
-            case ts.SyntaxKind.TemplateSpan:
-                return this.kind;
+            //case ts.SyntaxKind.ExpressionWithTypeArguments:
+            //    return this.kind;
+            //case ts.SyntaxKind.AsExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.TemplateSpan:
+            //    return this.kind;
             case ts.SyntaxKind.SemicolonClassElement:
                 return this.kind;
-            case ts.SyntaxKind.Block:
-                return this.kind;
-            case ts.SyntaxKind.VariableStatement:
-                return this.kind;
-            case ts.SyntaxKind.EmptyStatement:
-                return this.kind;
-            case ts.SyntaxKind.ExpressionStatement:
-                return this.kind;
-            case ts.SyntaxKind.IfStatement:
-                return this.kind;
-            case ts.SyntaxKind.DoStatement:
-                return this.kind;
-            case ts.SyntaxKind.WhileStatement:
-                return this.kind;
-            case ts.SyntaxKind.ForStatement:
-                return this.kind;
-            case ts.SyntaxKind.ForInStatement:
-                return this.kind;
-            case ts.SyntaxKind.ForOfStatement:
-                return this.kind;
-            case ts.SyntaxKind.ContinueStatement:
-                return this.kind;
-            case ts.SyntaxKind.BreakStatement:
-                return this.kind;
-            case ts.SyntaxKind.ReturnStatement:
-                return this.kind;
-            case ts.SyntaxKind.WithStatement:
-                return this.kind;
-            case ts.SyntaxKind.SwitchStatement:
-                return this.kind;
-            case ts.SyntaxKind.LabeledStatement:
-                return this.kind;
-            case ts.SyntaxKind.ThrowStatement:
-                return this.kind;
-            case ts.SyntaxKind.TryStatement:
-                return this.kind;
+            //case ts.SyntaxKind.Block:
+            //    return this.kind;
+            //case ts.SyntaxKind.VariableStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.EmptyStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ExpressionStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.IfStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.DoStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.WhileStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ForStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ForInStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ForOfStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ContinueStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.BreakStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ReturnStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.WithStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.SwitchStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.LabeledStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.ThrowStatement:
+            //    return this.kind;
+            //case ts.SyntaxKind.TryStatement:
+            //    return this.kind;
             case ts.SyntaxKind.DebuggerStatement:
                 return this.kind;
-            case ts.SyntaxKind.VariableDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.VariableDeclarationList:
-                return this.kind;
-            case ts.SyntaxKind.FunctionDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.ClassDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.InterfaceDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.TypeAliasDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.EnumDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.ModuleDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.ModuleBlock:
-                return this.kind;
-            case ts.SyntaxKind.CaseBlock:
-                return this.kind;
-            case ts.SyntaxKind.ImportEqualsDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.ImportDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.ImportClause:
-                return this.kind;
-            case ts.SyntaxKind.NamespaceImport:
-                return this.kind;
-            case ts.SyntaxKind.NamedImports:
-                return this.kind;
-            case ts.SyntaxKind.ImportSpecifier:
-                return this.kind;
-            case ts.SyntaxKind.ExportAssignment:
-                return this.kind;
-            case ts.SyntaxKind.ExportDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.NamedExports:
-                return this.kind;
-            case ts.SyntaxKind.ExportSpecifier:
-                return this.kind;
-            case ts.SyntaxKind.MissingDeclaration:
-                return this.kind;
-            case ts.SyntaxKind.ExternalModuleReference:
-                return this.kind;
-            case ts.SyntaxKind.JsxElement:
-                return this.kind;
-            case ts.SyntaxKind.JsxSelfClosingElement:
-                return this.kind;
-            case ts.SyntaxKind.JsxOpeningElement:
-                return this.kind;
-            case ts.SyntaxKind.JsxText:
-                return this.kind;
-            case ts.SyntaxKind.JsxClosingElement:
-                return this.kind;
-            case ts.SyntaxKind.JsxAttribute:
-                return this.kind;
-            case ts.SyntaxKind.JsxSpreadAttribute:
-                return this.kind;
-            case ts.SyntaxKind.JsxExpression:
-                return this.kind;
-            case ts.SyntaxKind.CaseClause:
-                return this.kind;
-            case ts.SyntaxKind.DefaultClause:
-                return this.kind;
-            case ts.SyntaxKind.HeritageClause:
-                return this.kind;
-            case ts.SyntaxKind.CatchClause:
-                return this.kind;
-            case ts.SyntaxKind.PropertyAssignment:
-                return this.kind;
-            case ts.SyntaxKind.ShorthandPropertyAssignment:
-                return this.kind;
-            case ts.SyntaxKind.EnumMember:
-                return this.kind;
-            case ts.SyntaxKind.SourceFile:
-                return this.kind;
-            case ts.SyntaxKind.JSDocTypeExpression:
-                return this.kind;
-            case ts.SyntaxKind.JSDocAllType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocUnknownType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocArrayType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocUnionType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocTupleType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocNullableType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocNonNullableType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocRecordType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocRecordMember:
-                return this.kind;
-            case ts.SyntaxKind.JSDocTypeReference:
-                return this.kind;
-            case ts.SyntaxKind.JSDocOptionalType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocFunctionType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocVariadicType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocConstructorType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocThisType:
-                return this.kind;
-            case ts.SyntaxKind.JSDocComment:
-                return this.kind;
-            case ts.SyntaxKind.JSDocTag:
-                return this.kind;
-            case ts.SyntaxKind.JSDocParameterTag:
-                return this.kind;
-            case ts.SyntaxKind.JSDocReturnTag:
-                return this.kind;
-            case ts.SyntaxKind.JSDocTypeTag:
-                return this.kind;
-            case ts.SyntaxKind.JSDocTemplateTag:
-                return this.kind;
+            //case ts.SyntaxKind.VariableDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.VariableDeclarationList:
+            //    return this.kind;
+            //case ts.SyntaxKind.FunctionDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.ClassDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.InterfaceDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.TypeAliasDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.EnumDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.ModuleDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.ModuleBlock:
+            //    return this.kind;
+            //case ts.SyntaxKind.CaseBlock:
+            //    return this.kind;
+            //case ts.SyntaxKind.ImportEqualsDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.ImportDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.ImportClause:
+            //    return this.kind;
+            //case ts.SyntaxKind.NamespaceImport:
+            //    return this.kind;
+            //case ts.SyntaxKind.NamedImports:
+            //    return this.kind;
+            //case ts.SyntaxKind.ImportSpecifier:
+            //    return this.kind;
+            //case ts.SyntaxKind.ExportAssignment:
+            //    return this.kind;
+            //case ts.SyntaxKind.ExportDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.NamedExports:
+            //    return this.kind;
+            //case ts.SyntaxKind.ExportSpecifier:
+            //    return this.kind;
+            //case ts.SyntaxKind.MissingDeclaration:
+            //    return this.kind;
+            //case ts.SyntaxKind.ExternalModuleReference:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxElement:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxSelfClosingElement:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxOpeningElement:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxText:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxClosingElement:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxAttribute:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxSpreadAttribute:
+            //    return this.kind;
+            //case ts.SyntaxKind.JsxExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.CaseClause:
+            //    return this.kind;
+            //case ts.SyntaxKind.DefaultClause:
+            //    return this.kind;
+            //case ts.SyntaxKind.HeritageClause:
+            //    return this.kind;
+            //case ts.SyntaxKind.CatchClause:
+            //    return this.kind;
+            //case ts.SyntaxKind.PropertyAssignment:
+            //    return this.kind;
+            //case ts.SyntaxKind.ShorthandPropertyAssignment:
+            //    return this.kind;
+            //case ts.SyntaxKind.EnumMember:
+            //    return this.kind;
+            //case ts.SyntaxKind.SourceFile:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocTypeExpression:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocAllType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocUnknownType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocArrayType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocUnionType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocTupleType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocNullableType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocNonNullableType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocRecordType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocRecordMember:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocTypeReference:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocOptionalType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocFunctionType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocVariadicType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocConstructorType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocThisType:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocComment:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocTag:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocParameterTag:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocReturnTag:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocTypeTag:
+            //    return this.kind;
+            //case ts.SyntaxKind.JSDocTemplateTag:
+            //    return this.kind;
             case ts.SyntaxKind.SyntaxList:
                 return this.kind;
         }

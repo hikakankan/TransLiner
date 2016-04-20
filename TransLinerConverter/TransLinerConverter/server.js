@@ -3,16 +3,6 @@ var ts = require("typescript");
 //import convert = require("./convert");
 var convert = require("./convert");
 var ParseObject = require("./ParseObject");
-function convertToObject(node) {
-    var obj = convert.forEachChild(node, convertToObject, convertNodesToObject, collectChildren, syntaxKindToObject);
-    //var children = ts.forEachChild(node, convertToObject, convertNodesToObject);
-    if (obj) {
-        return new ParseObject(node, obj.children, null, null);
-    }
-    else {
-        return new ParseObject(node, null, null, null);
-    }
-}
 function setParent(pobj, list) {
     if (list) {
         for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
@@ -23,20 +13,38 @@ function setParent(pobj, list) {
         }
     }
 }
+function createParseObject(node, children, list, syntaxKind) {
+    var pobj = new ParseObject(node, children, list, syntaxKind);
+    setParent(pobj, children);
+    setParent(pobj, list);
+    return pobj;
+}
+function convertToObject(node) {
+    var obj = convert.forEachChild(node, convertToObject, convertNodesToObject, collectChildren, syntaxKindToObject);
+    //var children = ts.forEachChild(node, convertToObject, convertNodesToObject);
+    if (obj) {
+        return createParseObject(node, obj.children, null, null);
+    }
+    else {
+        return createParseObject(node, null, null, null);
+    }
+}
 function convertNodesToObject(nodes) {
     var list = new Array();
     for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
         var node = nodes_1[_i];
         list.push(convertToObject(node));
     }
-    var pobj = new ParseObject(null, null, list, null);
-    setParent(pobj, list);
-    return pobj;
+    return createParseObject(null, null, list, null);
+    //var pobj = new ParseObject(null, null, list, null);
+    //setParent(pobj, list);
+    //return pobj;
 }
 function collectChildren(children) {
-    var pobj = new ParseObject(null, children, null, null);
-    setParent(pobj, children);
-    return pobj;
+    return createParseObject(null, children, null, null);
+    //var pobj = new ParseObject(null, children, null, null);
+    //setParent(pobj, children);
+    //return pobj;
 }
 function syntaxKindToObject(syntaxKind) {
     return new ParseObject(null, null, null, syntaxKind);
